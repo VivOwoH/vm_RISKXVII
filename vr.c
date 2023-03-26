@@ -15,12 +15,12 @@ void Console_Write_int(uint32_t value) {
 
 // print the value being stored as a single 32-bit (4bytes) unsigned int in lower case hexadecimal format to stdout
 void Console_Write_uint(uint32_t value) {
-    fprintf(stdout, "%.8x", value);
+    fprintf(stdout, "%.x", value);
 }
 
 // halt and exit
 void Console_Halt() {
-    fprintf(stdout, "CPU Halt Requested");
+    fprintf(stdout, "CPU Halt Requested\n");
     exit(3);
 }
 
