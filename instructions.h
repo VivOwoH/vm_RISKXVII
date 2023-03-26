@@ -22,22 +22,22 @@ void AND(uint32_t rd, uint32_t rs1, uint32_t rs2);
 
 // type I
 void ADDI(uint32_t rd, uint32_t rs1, uint32_t imm);
-void LB(uint32_t rd, uint32_t rs1, uint32_t imm);
+void LB(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc);
 void JALR(uint32_t rd, uint32_t rs1, uint32_t imm);
-void LH(uint32_t rd, uint32_t rs1, uint32_t imm);
+void LH(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc);
 void SLTI(uint32_t rd, uint32_t rs1, uint32_t imm);
-void LW(uint32_t rd, uint32_t rs1, uint32_t imm);
+void LW(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc);
 void SLTIU(uint32_t rd, uint32_t rs1, uint32_t imm);
 void XORI(uint32_t rd, uint32_t rs1, uint32_t imm);
-void LBU(uint32_t rd, uint32_t rs1, uint32_t imm);
-void LHU(uint32_t rd, uint32_t rs1, uint32_t imm);
+void LBU(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc);
+void LHU(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc);
 void ORI(uint32_t rd, uint32_t rs1, uint32_t imm);
 void ANDI(uint32_t rd, uint32_t rs1, uint32_t imm);
 
 // type S
-void SB(uint32_t rs1, uint32_t rs2, uint32_t imm);
-void SH(uint32_t rs1, uint32_t rs2, uint32_t imm);
-void SW(uint32_t rs1, uint32_t rs2, uint32_t imm);
+void SB(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc);
+void SH(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc);
+void SW(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc);
 
 // type SB
 void BEQ(uint32_t rs1, uint32_t rs2, uint32_t imm);

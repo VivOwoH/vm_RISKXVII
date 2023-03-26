@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "types.h"
 #include "instructions.h"
+#include "vr.h"
 
 // MEMORY
 struct mem mymem;
@@ -104,7 +105,7 @@ void fetch_instruc(struct mem * memptr) {
                 
             default:
                 printf("Instruction Not Implemented: %.6x\n", instruc);
-                puts("PERFORM REGISTER DUMP!!!");
+                Dump_reg_bank();
                 exit(4);
         }
         regs[R0] = 0;

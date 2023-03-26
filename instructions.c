@@ -11,7 +11,7 @@ uint32_t sign_extend(uint32_t n, int imm_bits) {
     // MSB 1: sign extend left with 1
     // MSB 0: sign extend left with 0 (i.e. do nothing)
     if ( ((n >> (imm_bits - 1)) & 0x1) == 1) {
-        n = n | (0xFFFFFFFF << imm_bits); // flip all bits with OR to store the neg number
+        n = n | (0xFFFFFFFF << imm_bits);
     }
     return n;
 }
@@ -83,7 +83,7 @@ void type_I(uint32_t instruc, uint32_t opcode) {
             ADDI(rd, rs1, imm);
             break;
         case 0x3:
-            LB(rd, rs1, imm);
+            LB(rd, rs1, imm, instruc);
             break;
         case 0x67:
             JALR(rd, rs1, imm);
@@ -91,7 +91,7 @@ void type_I(uint32_t instruc, uint32_t opcode) {
         }
     }
     else if (func3 == 0x1) {
-        LH(rd, rs1, imm);
+        LH(rd, rs1, imm, instruc);
     }
     else if (func3 == 0x2) {
         switch (opcode) {
@@ -99,7 +99,7 @@ void type_I(uint32_t instruc, uint32_t opcode) {
             SLTI(rd, rs1, imm);
             break;
         case 0x3:
-            LW(rd, rs1, imm);
+            LW(rd, rs1, imm, instruc);
             break;
         }
     }
@@ -112,12 +112,12 @@ void type_I(uint32_t instruc, uint32_t opcode) {
             XORI(rd, rs1, imm);
             break;
         case 0x3:
-            LBU(rd, rs1, imm);
+            LBU(rd, rs1, imm, instruc);
             break;
         }
     }
     else if (func3 == 0x5) {
-        LHU(rd, rs1, imm);
+        LHU(rd, rs1, imm, instruc);
     }    
     else if (func3 == 0x6) {
         ORI(rd, rs1, imm);
@@ -140,11 +140,11 @@ void type_S(uint32_t instruc) {
     uint32_t imm = sign_extend( ( ((instruc >> 25) << 5 ) + ((instruc >> 7) & 0x1F) ), 12); // 12 bits
     
     if (func3 == 0x0)
-        SB(rs1, rs2, imm);
+        SB(rs1, rs2, imm, instruc);
     else if (func3 == 0x1)
-        SH(rs1, rs2, imm);
+        SH(rs1, rs2, imm, instruc);
     else if (func3 == 0x2)
-        SW(rs1, rs2, imm);
+        SW(rs1, rs2, imm, instruc);
 }
 
 void type_SB(uint32_t instruc) {
@@ -198,46 +198,57 @@ void type_UJ(uint32_t instruc) {
 }   
 
 // ------------------------- MEMORY -----------------------------
-uint32_t mem_read(uint32_t addr) {
+uint32_t mem_read(uint32_t addr, uint32_t instruc) {
     switch (addr) {
         case (C_Read_char):
-            puts("-------console read char-------"); 
+            // puts("-------console read char-------"); 
             return Console_Read_char();
         case (C_Read_int):
-            puts("---------console read int-------"); 
+            // puts("---------console read int-------"); 
             return Console_Read_int();
+        default:
+            return memptr->inst_mem[addr];
     }
     return 0;
 }
 
-uint32_t mem_write(uint32_t addr, uint32_t value) {
+uint32_t mem_write(uint32_t addr, uint32_t value, uint32_t instruc) {
     switch (addr) {
         case (C_Write_char):
-            puts("---------console write char-------"); 
+            // puts("---------console write char-------"); 
             Console_Write_char(value);
             break;
         case (C_Write_int):
-            puts("---------console write int-------"); 
+            // puts("---------console write int-------"); 
             Console_Write_int(value);
             break;
         case (C_Write_uint):
-            puts("---------console write uint-------"); 
+            // puts("---------console write uint-------"); 
             Console_Write_uint(value);
             break;
         case (Halt):
             Console_Halt();
             break;
         case (D_PC):
-            puts("---------dump pc-------\n"); 
+            // puts("---------dump pc-------\n"); 
             Dump_PC();
             break;
         case (D_reg_bank):
-            puts("---------dump reg bank-------\n"); 
+            // puts("---------dump reg bank-------\n"); 
             Dump_reg_bank();
             break;
         case (D_mem_word):
-            puts("---------dump mem word-------\n"); 
+            // puts("---------dump mem word-------\n"); 
             Dump_mem_word();
+            break;
+        default:
+            if (addr >= INSTRUC_MEM && addr < (INSTRUC_MEM + DATA_MEM)) {
+                memptr->inst_mem[addr] = value;
+            } else {
+                printf("Illegal Operation: %.6x\n", instruc);
+                Dump_reg_bank();
+                exit(5);
+            }            
             break;
     }
     return 0;
@@ -246,41 +257,41 @@ uint32_t mem_write(uint32_t addr, uint32_t value) {
 // ------------------------- EXECUTE --------------------------------
 void ADD(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = regs[rs1] + regs[rs2];
-    printf("add | rs1=%d, rs2=%d | regs[rd] = %d\n", rs1, rs2, regs[rd]);
+    // printf("%d: add | rs1=%d, rs2=%d | regs[rd] = %d\n", regs[RPC], rs1, rs2, regs[rd]);
 }
 
 void SUB(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = regs[rs1] - regs[rs2];
-    printf("sub | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: sub | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 // logical left shift on the value in rs1 by the shift amount held in the lower 5 bits of rs2
 void SLL(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = regs[rs1] << regs[rs2];
-    printf("ssl | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: ssl | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 // Place 1 in rd if rs1 < rs2 (both treated as signed numbers), else 0 is written to rd
 void SLT(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = ((int32_t) regs[rs1] < (int32_t) regs[rs2]) ? 1 : 0;
-    printf("slt | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: slt | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 // Place 1 in rd if rs1 < rs2 (both treated as unsigned numbers), else 0 is written to rd
 void SLTU(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = (regs[rs1] < regs[rs2]) ? 1 : 0;
-    printf("sltu | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: sltu | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 void XOR(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = regs[rs1] ^ regs[rs2]; 
-    printf("xor | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: xor | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 // shift right
 void SRL(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = regs[rs1] >> regs[rs2];
-    printf("srl | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: srl | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 // rotate right - right most bit is moved to the left most after shifting.
@@ -288,165 +299,173 @@ void SRA(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     // original = after shifted
     regs[rd] =  regs[rs1] >> regs[rs2] |  // OR with original with 1 bit to right (i.e. leftmost vacant)
                 ( (regs[rs1] >> regs[rs2]) & 0x1 ) << (regs[rs2]+1); // get right most bit then extended til left most 
-    printf("sra | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: sra | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 void OR(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = regs[rs1] | regs[rs2];
-    printf("or | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: or | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 void AND(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = regs[rs1] & regs[rs2];
-    printf("and | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: and | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 void ADDI(uint32_t rd, uint32_t rs1, uint32_t imm) {
     regs[rd] = regs[rs1] + imm;
-    printf("addi | rd=%d, rs1=%d, imm = %d | regs[rd] = %d \n", rd, rs1, imm, regs[rd]);
+    // printf("%d: addi | rd=%d, rs1=%d, imm = %d | regs[rd] = %d \n", regs[RPC], rd, rs1, imm, regs[rd]);
 }
 
 // Load a 8-bit value from memory into a register, and sign extend the value
-void LB(uint32_t rd, uint32_t rs1, uint32_t imm) {
+void LB(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
     // i.e. LSB 8 bits of value returned from mem_read
-    printf("lb | rs1=%d, imm=%d | regs[rd] = %d\n", rs1, imm, regs[rd]);
-    regs[rd] = sign_extend(mem_read(regs[rs1] + imm) & 0xFF, 8);
+    // printf("%d: lb | rs1=%d, imm=%d | regs[rd] = %d\n", regs[RPC], rs1, imm, regs[rd]);
+    regs[rd] = sign_extend(mem_read(regs[rs1] + imm, instruc) & 0xFF, 8);
 }
 
 // Load a 16-bit value from memory into a register, and sign extend the value.
-void LH(uint32_t rd, uint32_t rs1, uint32_t imm) {
+void LH(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
     // i.e. LSB 16 bits of value returned from mem_read
-    printf("lh | regs[rd] = %d\n", regs[rd]);
-    regs[rd] = sign_extend(mem_read(regs[rs1] + imm) & 0xFFFF, 16);
+    // printf("%d: lh | regs[rd] = %d\n", regs[RPC], regs[rd]);
+    regs[rd] = sign_extend(mem_read(regs[rs1] + imm, instruc) & 0xFFFF, 16);
 }
 
 // Load a 32-bit value from memory into a register
-void LW(uint32_t rd, uint32_t rs1, uint32_t imm) {
-    printf("lw | rd=%d, rs1=%d, imm = %d | regs[rs1]+imm=%d, ", rd, rs1, imm, regs[rs1]+imm);
-    regs[rd] = mem_read(regs[rs1] + imm);
-    printf("result: regs[rd]=%d\n", regs[rd]);
+void LW(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
+    // printf("%d: lw | rd=%d, rs1=%d, imm = %d | regs[rs1]+imm=%d, \n", regs[RPC], rd, rs1, imm, regs[rs1]+imm);
+    regs[rd] = mem_read(regs[rs1] + imm, instruc);
+    // printf("result: regs[rd]=%d\n", regs[rd]);
 }
 
 // Set rd to 1 if the value in rs1 is smaller than imm, 0 otherwise
 void SLTI(uint32_t rd, uint32_t rs1, uint32_t imm) {
     regs[rd] = ((int32_t) regs[rs1] < imm) ? 1 : 0;
-    printf("slti | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: slti | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 // Set rd to 1 if the value in rs1 is smaller than imm, 0 otherwise, unsigned
 void SLTIU(uint32_t rd, uint32_t rs1, uint32_t imm) {
     regs[rd] = (regs[rs1] < imm) ? 1 : 0;
-    printf("sltiu | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: sltiu | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 void XORI(uint32_t rd, uint32_t rs1, uint32_t imm) {
     regs[rd] = regs[rs1] ^ imm;
-    printf("xori | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: xori | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 // Load a 8-bit value from memory into a register
-void LBU(uint32_t rd, uint32_t rs1, uint32_t imm) {
-    printf("lbu | rd=%d, rs1=%d, imm=%d, ", rd, rs1, imm);
-    regs[rd] = mem_read(regs[rs1] + imm) & 0xFF;
-    printf("result regs[rd]=%d\n", regs[rd]);
+void LBU(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
+    // printf("%d: lbu | rd=%d, rs1=%d, imm=%d, \n", regs[RPC], rd, rs1, imm);
+    regs[rd] = mem_read(regs[rs1] + imm, instruc) & 0xFF;
+    // printf("result regs[rd]=%d\n", regs[rd]);
 }
 
 // Load a 16-bit value from memory into a register
-void LHU(uint32_t rd, uint32_t rs1, uint32_t imm) {
-    printf("lhu | regs[rd] = %d\n", regs[rd]);
-    regs[rd] = mem_read(regs[rs1] + imm) & 0xFFFF;
+void LHU(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
+    // printf("%d: lhu | regs[rd] = %d\n", regs[RPC], regs[rd]);
+    regs[rd] = mem_read(regs[rs1] + imm, instruc) & 0xFFFF;
 }
 
 void ORI(uint32_t rd, uint32_t rs1, uint32_t imm) {
     regs[rd] = regs[rs1] | imm;
-    printf("ori | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: ori | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 void ANDI(uint32_t rd, uint32_t rs1, uint32_t imm) {
     regs[rd] = regs[rs1] & imm;
-    printf("andi | regs[rd] = %d\n", regs[rd]);
+    // printf("%d: andi | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
 // store a 8-bit value to memory from a register
-void SB(uint32_t rs1, uint32_t rs2, uint32_t imm) {
-    printf("sb | rs1=%d, rs2=%d, imm=%d \n", rs1, rs2, imm);
-    mem_write((regs[rs1] + imm), regs[rs2] & 0xFF);
+void SB(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
+    // printf("%d: sb | rs1=%d, rs2=%d, imm=%d \n", regs[RPC], rs1, rs2, imm);
+    mem_write((regs[rs1] + imm), regs[rs2] & 0xFF, instruc);
 }
 
 // store a 16-bit value to memory from a register
-void SH(uint32_t rs1, uint32_t rs2, uint32_t imm) {
-    printf("sh | rs1=%d, rs2=%d, imm=%d\n", rs1, rs2, imm);
-    mem_write((regs[rs1] + imm), regs[rs2] & 0xFFFF);
+void SH(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
+    // printf("%d: sh | rs1=%d, rs2=%d, imm=%d\n", regs[RPC], rs1, rs2, imm);
+    mem_write((regs[rs1] + imm), regs[rs2] & 0xFFFF, instruc);
 }
 
 // store a 32-bit value to memory from a register
-void SW(uint32_t rs1, uint32_t rs2, uint32_t imm) {
-    printf("sw | rs1=%d, rs2=%d, imm=%d\n", rs1, rs2, imm);
-    mem_write((regs[rs1] + imm), regs[rs2]);
+void SW(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
+    // printf("%d: sw | rs1=%d, rs2=%d, imm=%d | addr=%.2x, value=%d\n", regs[RPC], rs1, rs2, imm, regs[rs1]+imm, regs[rs2]);
+    mem_write((regs[rs1] + imm), regs[rs2], instruc);
 }
 
 // branch if equal
 void BEQ(uint32_t rs1, uint32_t rs2, uint32_t imm) {
+    // printf("%d: beq | ", regs[RPC]);
     if (regs[rs1] == regs[rs2]) {
         regs[RPC] = (regs[RPC] - 4) + (imm << 1);
     }
-    printf("beq | rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%.2x\n", rs1, rs2, imm, regs[RPC]+4);
+    // printf("imm=%d, regs[rs1]=%d, regs[rs2]=%d | regs[RPC](x)=%d\n", imm, regs[rs1], regs[rs2], regs[RPC]+4);
 }
 
 // branch if not equal
 void BNE(uint32_t rs1, uint32_t rs2, uint32_t imm) {
+    // printf("%d: bne | ", regs[RPC]);
     if (regs[rs1] != regs[rs2]) {
         regs[RPC] = (regs[RPC] - 4) + (imm << 1);
     }
-    printf("bne | rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%.2x\n", rs1, rs2, imm, regs[RPC]+4);
+    // printf("rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%d\n", rs1, rs2, imm, regs[RPC]+4);
 }
 
 // branch if less than, signed
 void BLT(uint32_t rs1, uint32_t rs2, uint32_t imm) {
+    // printf("%d: blt | ", regs[RPC]);
     if ((int32_t) regs[rs1] < (int32_t) regs[rs2]) {
         regs[RPC] = (regs[RPC] - 4) + (imm << 1);
     }
-    printf("blt | rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%.2x\n", rs1, rs2, imm, regs[RPC]+4);
+    // printf("rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%d\n", rs1, rs2, imm, regs[RPC]+4);
 }
 
 // branch if less than, unsigned
 void BLTU(uint32_t rs1, uint32_t rs2, uint32_t imm) {
+    // printf("%d: bltu | ", regs[RPC]);
     if (regs[rs1] < regs[rs2]) {
         regs[RPC] = (regs[RPC] - 4) + (imm << 1);
     }
-    printf("bltu | rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%.2x\n", rs1, rs2, imm, regs[RPC]+4);
+    // printf("rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%d\n", rs1, rs2, imm, regs[RPC]+4);
 }
 
 // branch if Greater Than or Equal
 void BGE(uint32_t rs1, uint32_t rs2, uint32_t imm) {
+    // printf("%d: bge | ", regs[RPC]);
     if ((int32_t) regs[rs1] >= (int32_t) regs[rs2]) {
         regs[RPC] = (regs[RPC] - 4) + (imm << 1);
     }
-    printf("bge | rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%.2x\n", rs1, rs2, imm, regs[RPC]+4);
+    // printf("rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%d\n", rs1, rs2, imm, regs[RPC]+4);
 }
 
 // branch if Greater Than or Equal, unsigned
 void BGEU(uint32_t rs1, uint32_t rs2, uint32_t imm) {
+    // printf("%d: bgeu | ", regs[RPC]);
     if (regs[rs1] >= regs[rs2]) {
         regs[RPC] = (regs[RPC] - 4) + (imm << 1);
     }
-    printf("bgeu | rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%.2x\n", rs1, rs2, imm, regs[RPC]+4);
+    // printf("rs1=%d, rs2=%d, imm=%d | regs[RPC](x)=%d\n", rs1, rs2, imm, regs[RPC]+4);
 }   
 
 void LUI(uint32_t rd, uint32_t imm) {
     regs[rd] = imm << 12; // sign extend to 32 bits (upper from reg, lower to 0)
-    printf("lui | rd=%d, imm=%.2x, regs[rd] = %d\n", rd, imm, regs[rd]);
+    // printf("%d: lui | rd=%d, imm=%.2x, regs[rd] = %d\n", regs[RPC], rd, imm, regs[rd]);
 }
 
 void JAL(uint32_t rd, uint32_t imm) { 
+    // printf("%d: jal | rd=%d, ", regs[RPC], rd);
     regs[rd] = regs[RPC] + 4; // save PC value of next instruc
     regs[RPC] = (regs[RPC] - 4) + (imm << 1); // jump to target (and no need to incremnent 4 to PC)
-    printf("jal | rd=%d, regs[rd]=%d, imm = %d | regs[RPC](x) = %.2x\n", rd, regs[rd], imm, regs[RPC]+4);
+    // printf("regs[rd]=%d, imm = %d, regs[RPC](x) = %d\n", regs[rd], imm, regs[RPC]+4);
 }
 
 // Jump to target code address from a register, and save the PC value of next instruction into a register.
 void JALR(uint32_t rd, uint32_t rs1, uint32_t imm) {
+    // printf("%d: jalr rd=%d, regs[rs1]=%d, imm=%d ", regs[RPC], rd, regs[rs1], imm);
     regs[rd] = regs[RPC] + 4;
     regs[RPC] = regs[rs1] + imm - 4; // and no need to incremnent 4 to PC
-    printf("jalr rd=%d, regs[rs1]=%d, imm=%d | regs[RPC](x)=%.2x | regs[rd]=%d\n", rd, regs[rs1], imm, regs[RPC]+4, regs[rd]);
+    // printf("regs[RPC](x)=%d\n", regs[RPC]+4);
 }
