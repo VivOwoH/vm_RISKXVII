@@ -104,9 +104,7 @@ void fetch_instruc(struct mem * memptr) {
                 break;
                 
             default:
-                printf("Instruction Not Implemented: %.6x\n", instruc);
-                Dump_reg_bank();
-                exit(4);
+                err_not_implemented(instruc);
         }
         regs[R0] = 0;
         regs[RPC] += 4; // increment PC 

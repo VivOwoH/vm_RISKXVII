@@ -75,8 +75,6 @@ void type_I(uint32_t instruc, uint32_t opcode) {
     uint32_t rs1 = (instruc >> 15) & 0x1F;
     uint32_t imm = sign_extend((instruc >> 20), 12); // 12 bits
 
-    // printf("func3 = %.2x\n", func3);
-
     if (func3 == 0x0) {
         switch (opcode) {
         case 0x13:
@@ -132,8 +130,6 @@ void type_S(uint32_t instruc) {
     // func3 (14<-12 bits)
     uint32_t func3 = (instruc >> 12) & 0x7;
 
-    // printf("%.2x | \n", func3);
-
     uint32_t rs1 = (instruc >> 15) & 0x1F;
     uint32_t rs2 = (instruc >> 20) & 0x1F;
     
@@ -150,8 +146,6 @@ void type_S(uint32_t instruc) {
 void type_SB(uint32_t instruc) {
     // func3 (14<-12 bits)
     uint32_t func3 = (instruc >> 12) & 0x7;
-
-    // printf("%.2x | \n", func3);
 
     uint32_t rs1 = (instruc >> 15) & 0x1F;
     uint32_t rs2 = (instruc >> 20) & 0x1F;
@@ -198,7 +192,7 @@ void type_UJ(uint32_t instruc) {
 }   
 
 // ------------------------- MEMORY -----------------------------
-uint32_t mem_read(uint32_t addr, uint32_t instruc) {
+uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
     switch (addr) {
         case (C_Read_char):
             // puts("-------console read char-------"); 
@@ -207,12 +201,23 @@ uint32_t mem_read(uint32_t addr, uint32_t instruc) {
             // puts("---------console read int-------"); 
             return Console_Read_int();
         default:
-            return memptr->inst_mem[addr];
+            // read from instruc or data allowed
+            if (addr < (INSTRUC_MEM + DATA_MEM)) {
+                uint32_t value = 0;
+                for (int i = 0; i < num_cell; i++) {
+                    value += memptr->inst_mem[addr+i] << (8 * (num_cell-1-i)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                }
+                return value;
+            } else if (1) {
+                // TODO: heap bank addr range
+            } else {
+                err_illegal_op(instruc);
+            }
     }
     return 0;
 }
 
-uint32_t mem_write(uint32_t addr, uint32_t value, uint32_t instruc) {
+uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc) {
     switch (addr) {
         case (C_Write_char):
             // puts("---------console write char-------"); 
@@ -239,15 +244,16 @@ uint32_t mem_write(uint32_t addr, uint32_t value, uint32_t instruc) {
             break;
         case (D_mem_word):
             // puts("---------dump mem word-------\n"); 
-            Dump_mem_word();
+            Dump_mem_word(value, instruc);
             break;
         default:
+            // only write to data allowed
             if (addr >= INSTRUC_MEM && addr < (INSTRUC_MEM + DATA_MEM)) {
-                memptr->inst_mem[addr] = value;
+                for (int i = 0; i < num_cell; i++) {
+                    memptr->inst_mem[addr+i] = ( value >> (8 * (num_cell-1-i)) ) & 0xFF; 
+                }
             } else {
-                printf("Illegal Operation: %.6x\n", instruc);
-                Dump_reg_bank();
-                exit(5);
+                err_illegal_op(instruc);
             }            
             break;
     }
@@ -257,7 +263,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, uint32_t instruc) {
 // ------------------------- EXECUTE --------------------------------
 void ADD(uint32_t rd, uint32_t rs1, uint32_t rs2) {
     regs[rd] = regs[rs1] + regs[rs2];
-    // printf("%d: add | rs1=%d, rs2=%d | regs[rd] = %d\n", regs[RPC], rs1, rs2, regs[rd]);
+    // printf("%d: add | rs1=%d, rs2=%d, rd=%d | regs[rd] = %d\n", regs[RPC], rs1, rs2, rd, regs[rd]);
 }
 
 void SUB(uint32_t rd, uint32_t rs1, uint32_t rs2) {
@@ -319,23 +325,36 @@ void ADDI(uint32_t rd, uint32_t rs1, uint32_t imm) {
 
 // Load a 8-bit value from memory into a register, and sign extend the value
 void LB(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
-    // i.e. LSB 8 bits of value returned from mem_read
+    // i.e. LSB 8 bits of value returned from reading mem
     // printf("%d: lb | rs1=%d, imm=%d | regs[rd] = %d\n", regs[RPC], rs1, imm, regs[rd]);
-    regs[rd] = sign_extend(mem_read(regs[rs1] + imm, instruc) & 0xFF, 8);
+    regs[rd] = sign_extend(mem_read(regs[rs1] + imm, 1, instruc), 8);
 }
 
 // Load a 16-bit value from memory into a register, and sign extend the value.
 void LH(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
-    // i.e. LSB 16 bits of value returned from mem_read
+    // i.e. LSB 16 bits of value returned from reading mem
     // printf("%d: lh | regs[rd] = %d\n", regs[RPC], regs[rd]);
-    regs[rd] = sign_extend(mem_read(regs[rs1] + imm, instruc) & 0xFFFF, 16);
+    regs[rd] = sign_extend(mem_read(regs[rs1] + imm, 2, instruc), 16);
 }
 
 // Load a 32-bit value from memory into a register
 void LW(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
-    // printf("%d: lw | rd=%d, rs1=%d, imm = %d | regs[rs1]+imm=%d, \n", regs[RPC], rd, rs1, imm, regs[rs1]+imm);
-    regs[rd] = mem_read(regs[rs1] + imm, instruc);
+    // printf("%d: lw | rd=%d, rs1=%d, imm = %d | addr=%.2x\n", regs[RPC], rd, rs1, imm, regs[rs1]+imm);
+    regs[rd] = mem_read(regs[rs1] + imm, 4, instruc);
     // printf("result: regs[rd]=%d\n", regs[rd]);
+}
+
+// Load a 8-bit value from memory into a register
+void LBU(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
+    // printf("%d: lbu | rd=%d, rs1=%d, imm=%d, addr=%d\n", regs[RPC], rd, rs1, imm, regs[rs1]+imm);
+    regs[rd] = mem_read(regs[rs1] + imm, 1, instruc);
+    // printf("result regs[rd]=%d\n", regs[rd]);
+}
+
+// Load a 16-bit value from memory into a register
+void LHU(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
+    // printf("%d: lhu | regs[rd] = %d\n", regs[RPC], regs[rd]);
+    regs[rd] = mem_read(regs[rs1] + imm, 2, instruc);
 }
 
 // Set rd to 1 if the value in rs1 is smaller than imm, 0 otherwise
@@ -355,19 +374,6 @@ void XORI(uint32_t rd, uint32_t rs1, uint32_t imm) {
     // printf("%d: xori | regs[rd] = %d\n", regs[RPC], regs[rd]);
 }
 
-// Load a 8-bit value from memory into a register
-void LBU(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
-    // printf("%d: lbu | rd=%d, rs1=%d, imm=%d, \n", regs[RPC], rd, rs1, imm);
-    regs[rd] = mem_read(regs[rs1] + imm, instruc) & 0xFF;
-    // printf("result regs[rd]=%d\n", regs[rd]);
-}
-
-// Load a 16-bit value from memory into a register
-void LHU(uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t instruc) {
-    // printf("%d: lhu | regs[rd] = %d\n", regs[RPC], regs[rd]);
-    regs[rd] = mem_read(regs[rs1] + imm, instruc) & 0xFFFF;
-}
-
 void ORI(uint32_t rd, uint32_t rs1, uint32_t imm) {
     regs[rd] = regs[rs1] | imm;
     // printf("%d: ori | regs[rd] = %d\n", regs[RPC], regs[rd]);
@@ -381,19 +387,19 @@ void ANDI(uint32_t rd, uint32_t rs1, uint32_t imm) {
 // store a 8-bit value to memory from a register
 void SB(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sb | rs1=%d, rs2=%d, imm=%d \n", regs[RPC], rs1, rs2, imm);
-    mem_write((regs[rs1] + imm), regs[rs2] & 0xFF, instruc);
+    mem_write((regs[rs1] + imm), regs[rs2] & 0xFF, 1, instruc);
 }
 
 // store a 16-bit value to memory from a register
 void SH(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sh | rs1=%d, rs2=%d, imm=%d\n", regs[RPC], rs1, rs2, imm);
-    mem_write((regs[rs1] + imm), regs[rs2] & 0xFFFF, instruc);
+    mem_write((regs[rs1] + imm), regs[rs2] & 0xFFFF, 2, instruc);
 }
 
 // store a 32-bit value to memory from a register
 void SW(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sw | rs1=%d, rs2=%d, imm=%d | addr=%.2x, value=%d\n", regs[RPC], rs1, rs2, imm, regs[rs1]+imm, regs[rs2]);
-    mem_write((regs[rs1] + imm), regs[rs2], instruc);
+    mem_write((regs[rs1] + imm), regs[rs2], 4, instruc);
 }
 
 // branch if equal

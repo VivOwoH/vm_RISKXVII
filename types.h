@@ -4,7 +4,8 @@
 #define INSTRUC_MEM 1024
 #define DATA_MEM 1024
 #define VROUTINE_MEM 255
-#define HEAP 128 * 64
+#define HEAP_BANK 128 
+#define BLOCK_SZ 64 // 128 banks of 64 bytes
 
 #define NUM_REG 33
 
@@ -12,6 +13,7 @@ struct mem {
     uint8_t inst_mem[INSTRUC_MEM];
     uint8_t data_mem[DATA_MEM];
     uint8_t vroutine_mem[VROUTINE_MEM];
+    uint8_t heap_mem[HEAP_BANK * BLOCK_SZ];
 };
 
 extern struct mem * memptr;
@@ -33,5 +35,7 @@ enum {
    C_Read_int = 0x0816,
    D_PC = 0x0820,
    D_reg_bank = 0x0824,
-   D_mem_word = 0x0828
+   D_mem_word = 0x0828,
+   H_malloc = 0x0830,
+   H_free = 0x0834 
 };
