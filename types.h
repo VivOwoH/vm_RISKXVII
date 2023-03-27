@@ -13,6 +13,7 @@
 #define NUM_REG 33
 
 struct mem {
+    uint32_t R[NUM_REG];
     uint8_t inst_mem[INSTRUC_MEM];
     uint8_t data_mem[DATA_MEM];
     uint8_t vroutine_mem[VROUTINE_MEM];
@@ -25,8 +26,6 @@ extern struct mem * memptr;
 enum { R0 = 0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12,
        R13, R14, R15, R16, R17, R18, R19, R20, R21, R22, R23,
        R24, R25, R26, R27, R28, R29, R30, R31, RPC };
-
-extern uint32_t regs[NUM_REG]; 
 
 // VIRTUAL ROUTINES
 enum {

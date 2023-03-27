@@ -9,9 +9,6 @@
 struct mem mymem;
 struct mem * memptr = &mymem;
 
-// REGISTERS
-uint32_t regs[NUM_REG] = {0};
-
 // FORWARD DECLARATIONS
 void map_image(FILE *, struct mem *);
 void fetch_instruc(struct mem *);
@@ -30,6 +27,10 @@ int main(int argc, char **argv) {
 		puts("Unable to open file");
 		exit(2);
 	}
+
+    // initialize REGISTERS
+    for (int i = 0; i < NUM_REG; i++)
+        memptr->R[i] = 0;
 
     map_image(fp, memptr);
     fetch_instruc(memptr);
@@ -54,14 +55,14 @@ void map_image(FILE * fp, struct mem * memptr) {
 
 void fetch_instruc(struct mem * memptr) {
     
-    while (regs[RPC] < sizeof(memptr->inst_mem)) {
+    while (memptr->R[RPC] < sizeof(memptr->inst_mem)) {
         // read 4 uint8 to get uint32 instruction
         // LSB to MSB
-        uint8_t token1 = memptr->inst_mem[regs[RPC]++];
-        uint8_t token2 = memptr->inst_mem[regs[RPC]++];
-        uint8_t token3 = memptr->inst_mem[regs[RPC]++];
-        uint8_t token4 = memptr->inst_mem[regs[RPC]++]; // accessing parts of instruc
-        regs[RPC] -= 4; // reset to start of instruc
+        uint8_t token1 = memptr->inst_mem[memptr->R[RPC]++];
+        uint8_t token2 = memptr->inst_mem[memptr->R[RPC]++];
+        uint8_t token3 = memptr->inst_mem[memptr->R[RPC]++];
+        uint8_t token4 = memptr->inst_mem[memptr->R[RPC]++]; // accessing parts of instruc
+        memptr->R[RPC] -= 4; // reset to start of instruc
         uint32_t instruc = (token4 << 24) + (token3 << 16) + (token2 << 8) + token1;
         
         // OPCODE (right most 7 bits)
@@ -106,8 +107,8 @@ void fetch_instruc(struct mem * memptr) {
             default:
                 err_not_implemented(instruc);
         }
-        regs[R0] = 0;
-        regs[RPC] += 4; // increment PC 
+        memptr->R[R0] = 0;
+        memptr->R[RPC] += 4; // increment PC 
     }
 }
 

@@ -41,15 +41,15 @@ uint32_t Console_Read_int() {
 
 // print the value of PC in lower case hexadecimal format to stdout
 void Dump_PC() {
-    fprintf(stdout, "%.x\n", regs[RPC]);
+    fprintf(stdout, "%.x\n", memptr->R[RPC]);
 }
 
 // print the value of all registers, including PC, in lower case hexadecimal format to stdout
 // e.g. R[0] = 0xffffffff;
 void Dump_reg_bank() {
-    fprintf(stdout, "PC = 0x%.8x;\n", regs[RPC]);
+    fprintf(stdout, "PC = 0x%.8x;\n", memptr->R[RPC]);
     for (int i = 0; i < NUM_REG-1; i++) { // 33 reg exclude pc
-        fprintf(stdout, "R[%d] = 0x%.8x;\n", i, regs[i]);
+        fprintf(stdout, "R[%d] = 0x%.8x;\n", i, memptr->R[i]);
     }
 }
 
