@@ -218,10 +218,6 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
 }
 
 uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc) {
-    printf("next instruc=%.x %.x %.x %.x", memptr->inst_mem[regs[RPC]], 
-                                memptr->inst_mem[regs[RPC]+1], 
-                                memptr->inst_mem[regs[RPC]+2],
-                                memptr->inst_mem[regs[RPC]+3]);
     switch (addr) {
         case (C_Write_char):
             // puts("---------console write char-------"); 
@@ -391,18 +387,21 @@ void ANDI(uint32_t rd, uint32_t rs1, uint32_t imm) {
 // store a 8-bit value to memory from a register
 void SB(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sb | rs1=%d, rs2=%d, imm=%d \n", regs[RPC], rs1, rs2, imm);
+    printf("%.x", instruc);
     mem_write((regs[rs1] + imm), regs[rs2] & 0xFF, 1, instruc);
 }
 
 // store a 16-bit value to memory from a register
 void SH(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sh | rs1=%d, rs2=%d, imm=%d\n", regs[RPC], rs1, rs2, imm);
+    printf("%.x", instruc);
     mem_write((regs[rs1] + imm), regs[rs2] & 0xFFFF, 2, instruc);
 }
 
 // store a 32-bit value to memory from a register
 void SW(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sw | rs1=%d, rs2=%d, imm=%d | addr=%.2x, value=%d\n", regs[RPC], rs1, rs2, imm, regs[rs1]+imm, regs[rs2]);
+    printf("%.x", instruc);
     mem_write((regs[rs1] + imm), regs[rs2], 4, instruc);
 }
 
