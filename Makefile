@@ -2,7 +2,7 @@ TARGET = vm_riskxvii
 
 CC = gcc
 
-CFLAGS     = -c -s -Wall -Wvla -Werror -O0 -std=c11
+CFLAGS     = -c -Os -s -fno-ident -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -O0 -std=c11
 SRC        = vm_riskxvii.c instructions.c vr.c
 OBJ        = $(SRC:.c=.o)
 
