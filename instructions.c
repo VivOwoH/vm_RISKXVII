@@ -218,6 +218,10 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
 }
 
 uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc) {
+    printf("next instruc=%.x %.x %.x %.x", memptr->inst_mem[regs[RPC]], 
+                                memptr->inst_mem[regs[RPC]+1], 
+                                memptr->inst_mem[regs[RPC]+2],
+                                memptr->inst_mem[regs[RPC]+3])
     switch (addr) {
         case (C_Write_char):
             // puts("---------console write char-------"); 
