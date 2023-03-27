@@ -54,7 +54,7 @@ void map_image(FILE * fp, struct mem * memptr) {
 
 void fetch_instruc(struct mem * memptr) {
     
-    while (regs[RPC] < sizeof(memptr->inst_mem)/4) {
+    while (regs[RPC] < sizeof(memptr->inst_mem)) {
         // read 4 uint8 to get uint32 instruction
         // LSB to MSB
         uint8_t token1 = memptr->inst_mem[regs[RPC]++];

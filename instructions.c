@@ -387,21 +387,18 @@ void ANDI(uint32_t rd, uint32_t rs1, uint32_t imm) {
 // store a 8-bit value to memory from a register
 void SB(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sb | rs1=%d, rs2=%d, imm=%d \n", regs[RPC], rs1, rs2, imm);
-    printf("%.x", instruc);
     mem_write((regs[rs1] + imm), regs[rs2] & 0xFF, 1, instruc);
 }
 
 // store a 16-bit value to memory from a register
 void SH(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sh | rs1=%d, rs2=%d, imm=%d\n", regs[RPC], rs1, rs2, imm);
-    printf("%.x", instruc);
     mem_write((regs[rs1] + imm), regs[rs2] & 0xFFFF, 2, instruc);
 }
 
 // store a 32-bit value to memory from a register
 void SW(uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
     // printf("%d: sw | rs1=%d, rs2=%d, imm=%d | addr=%.2x, value=%d\n", regs[RPC], rs1, rs2, imm, regs[rs1]+imm, regs[rs2]);
-    printf("%.x", instruc);
     mem_write((regs[rs1] + imm), regs[rs2], 4, instruc);
 }
 
