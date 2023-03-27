@@ -218,7 +218,6 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
 }
 
 uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc) {
-    printf("addr=%.x\n", addr);
     switch (addr) {
         case (C_Write_char):
             // puts("---------console write char-------"); 
