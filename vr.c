@@ -48,7 +48,7 @@ void Dump_PC() {
 // e.g. R[0] = 0xffffffff;
 void Dump_reg_bank() {
     fprintf(stdout, "PC = 0x%.8x;\n", regs[RPC]);
-    for (int i = 0; i < NUM_REG; i++) {
+    for (int i = 0; i < NUM_REG-1; i++) { // 33 reg exclude pc
         fprintf(stdout, "R[%d] = 0x%.8x;\n", i, regs[i]);
     }
 }
