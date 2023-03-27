@@ -1,3 +1,6 @@
+#ifndef TYPES_H
+#define TYPES_H
+
 #include <stdint.h>
 
 // byte addressable
@@ -39,3 +42,5 @@ enum {
    H_malloc = 0x0830,
    H_free = 0x0834 
 };
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef VR_H
+#define VR_H
+
 #include <stdint.h>
 
 void Console_Write_char(uint32_t);
@@ -11,3 +14,5 @@ void Dump_reg_bank();
 void Dump_mem_word(uint32_t, uint32_t);
 void err_illegal_op(uint32_t);
 void err_not_implemented(uint32_t);
+
+#endif

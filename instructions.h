@@ -1,3 +1,6 @@
+#ifndef INSTRUCTIONS_H
+#define INSTRUCTIONS_H
+
 #include <stdint.h>
 
 // decode
@@ -52,3 +55,5 @@ void LUI(uint32_t rd, uint32_t imm);
 
 // type UJ
 void JAL(uint32_t rd, uint32_t imm);
+
+#endif
