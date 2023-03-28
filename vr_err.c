@@ -123,13 +123,13 @@ void VM_free(uint32_t addr, uint32_t instruc) {
 }
 
 void err_not_implemented(uint32_t instruc) {
-    printf("Instruction Not Implemented: 0x%#8x\n", instruc);
+    printf("Instruction Not Implemented: 0x%.8x\n", instruc);
     Dump_reg_bank();
     exit(4);
 }
 
 void err_illegal_op(uint32_t instruc) {
-    printf("Illegal Operation: 0x%#8x\n", instruc);
+    printf("Illegal Operation: 0x%.8x\n", instruc);
     Dump_reg_bank();
     exit(5);
 }
