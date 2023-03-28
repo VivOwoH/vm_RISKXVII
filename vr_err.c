@@ -88,6 +88,7 @@ uint32_t VM_malloc(uint32_t value) {
             int start = i + 1 - consecutives;
             // alloc
             for (int j = 0; j < consecutives; j++) {
+                printf("i=%d, j=%d", i, j);
                 if (j < consecutives - 1) { // link banks (e.g. 3 consec link 2 times)
                     heap[i]->next = heap[i+1];
                     heap[i+1]->prev = heap[i];
