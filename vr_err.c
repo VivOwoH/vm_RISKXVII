@@ -64,7 +64,7 @@ void Dump_mem_word(uint32_t v, uint32_t instruc) {
 }
 
 int current_bank_sz() {
-    int size = 0;
+    int size = 0; 
     struct heap_bank * current = head_bank;
     while (current != NULL) {
         size++;
@@ -87,7 +87,6 @@ void alloc_bank(struct heap_bank * bank, struct heap_bank * prev_bank, int len) 
         bank->prev = prev_bank;
         bank->next = NULL;
     }
-
     // alloc bank
     bank->is_free = 0;
     bank->alloc_len = len;
