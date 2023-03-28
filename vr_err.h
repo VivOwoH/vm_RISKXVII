@@ -13,7 +13,7 @@ uint32_t Console_Read_int();
 void Dump_PC();
 void Dump_reg_bank();
 void Dump_mem_word(uint32_t, uint32_t);
-void VM_malloc(uint32_t);
+uint32_t VM_malloc(uint32_t);
 void VM_free(uint32_t, uint32_t);
 
 // error handling

@@ -215,21 +215,15 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
                 }
                 return value;
             }
-            // read from heap bank: find heap bank that has addr in its range (can be up to 4 bytes) to check alloc
+            // read from heap bank: find heap bank that has addr in its range to check alloc
+            // ASSUMING: only reading 1 byte for now
             else if (addr > HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
-                // virtual addr -> physcial mem
-                struct heap_bank * current = head_bank; 
-                while (current != NULL) {
-                    // check if valid offset from malloced address, and bank is not freed
-                    if (addr >= current->addr && addr <= (current->addr + current->alloc_len - 1) 
-                            && !current->is_free) {
-                        uint32_t value = 0;
-                        for (int i = 0; i < num_cell; i++) {
-                            value += current->bank_content[addr - current->addr + i] << (8 * (num_cell-1-i));
-                        }
-                        return value;
+                for (int i = 0; i < NUM_BANK; i++) {
+                    // check if valid offset from malloced address, and bank is allocated
+                    if (addr >= heap[i]->addr && addr <= (heap[i]->addr + heap[i]->alloc_len - 1) 
+                            && !heap[i]->is_free) {
+                        return heap[i]->bank_content[addr - heap[i]->addr];
                     }
-                    current = current->next;
                 }
             } 
             else {
@@ -270,7 +264,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             break;
         case (H_malloc):
             // puts("---------malloc-------\n");
-            VM_malloc(value);
+            regs[R28] = VM_malloc(value);
             break;
         case (H_free):
             // puts("---------free-------\n");
@@ -283,20 +277,15 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                     memptr->inst_mem[addr+i] = ( value >> (8 * (num_cell-1-i)) ) & 0xFF; 
                 }
             }
-            // write to heap bank: find heap bank that has addr in its range (can be up to 4 bytes) to check alloc
+            // write to heap bank: find heap bank that has addr in its range to check alloc
+            // ASSUMING: only writing 1 byte for now
             else if (addr > HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
-                // virtual addr -> physcial mem
-                struct heap_bank * current = head_bank; 
-                while (current != NULL) {
-                    // check if valid offset from malloced address, and bank is not freed
-                    if (addr >= current->addr && addr <= (current->addr + current->alloc_len - 1) 
-                            && !current->is_free) {
-                        uint32_t value = 0;
-                        for (int i = 0; i < num_cell; i++) {
-                            current->bank_content[addr - current->addr + i] = ( value >> (8 * (num_cell-1-i)) ) & 0xFF; 
-                        }
+                for (int i = 0; i < NUM_BANK; i++) {
+                    // check if valid offset from malloced address, and bank is allocated
+                    if (addr >= heap[i]->addr && addr <= (heap[i]->addr + heap[i]->alloc_len - 1) 
+                            && !heap[i]->is_free) {
+                        heap[i]->bank_content[addr - heap[i]->addr] = value;
                     }
-                    current = current->next;
                 }
             } 
             else {

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "types.h"
 #include "instructions.h"
 #include "vr_err.h"
@@ -13,8 +14,7 @@ struct mem * memptr = &mymem;
 uint32_t regs[NUM_REG] = {0};
 
 // HEAP
-struct heap_bank * head_bank = NULL;
-struct heap_bank * tail_bank = NULL;
+struct heap_bank * heap[NUM_BANK] = {NULL};
 
 // FORWARD DECLARATIONS
 void map_image(FILE *, struct mem *);
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         puts("[output] [memory image]");
         exit(1);
     }
-    
+
     FILE * fp;
     fp = fopen(argv[1], "rb");
 
@@ -35,6 +35,22 @@ int main(int argc, char **argv) {
 		puts("Unable to open file");
 		exit(2);
 	}
+
+    // initialize heap
+    for (int i = 0; i < NUM_BANK; i++) {
+        heap[i] = &memptr->heap_mem[i]; // ptr->block
+        heap[i]->is_free = 1;
+        heap[i]->addr = HEAP_START_ADDR + (BANK_SZ * i);
+        heap[i]->prev = NULL; // link for a malloc
+        heap[i]->next = NULL;
+    }
+
+    // if (strcmp(argv[2], "malloc") == 0) {
+    //     printf("reg[28]=%.x\n", VM_malloc(80));
+    //     printf("reg[28]=%.x\n", VM_malloc(40));
+    //     for (int i = 0; i < BANK_SZ; i++)
+    //         printf("%d ", heap[0]->bank_content[i]);
+    // }
 
     map_image(fp, memptr);
     fetch_instruc(memptr);

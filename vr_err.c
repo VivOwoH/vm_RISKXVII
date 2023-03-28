@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <math.h>
 #include "vr_err.h"
 #include "types.h"
 
@@ -63,110 +64,58 @@ void Dump_mem_word(uint32_t v, uint32_t instruc) {
     }
 }
 
-int current_bank_sz() {
-    int size = 0;
-    struct heap_bank * current = head_bank;
-    while (current != NULL) {
-        size++;
-        current = current->next;
-    }
-    return size;
-}
-
-void alloc_bank(struct heap_bank * bank, struct heap_bank * prev_bank, int len) {
-    struct heap_bank new_bank;
-    if (bank == NULL) { // NULL ptr (create bank first)
-        bank = &new_bank;
-        prev_bank->next = bank; // update next ptr of prev bank
-        // **Special case: specify tail bank
-        tail_bank = (current_bank_sz() == NUM_BANK-1) ? bank : tail_bank;
-    }
-
-    if (prev_bank != NULL) { // exclude head bank with null prev
-        bank->addr = prev_bank->addr + prev_bank->alloc_len; // starting addr + alloc len
-        bank->prev = prev_bank;
-        bank->next = NULL;
-    }
-
-    // alloc bank
+void alloc_bank(struct heap_bank * bank, int len) {
     bank->is_free = 0;
     bank->alloc_len = len;
 }
 
 // request a bank with the size of the value being stored as len 
 // ptr <- starting address(virtual); stored in R[28] <- 0 if can't allocate
-void VM_malloc(uint32_t value) {
-    uint32_t *ini_addr = NULL; // start addr to store in R[28]
-
-    // cannot malloc size > virtual addr space
+uint32_t VM_malloc(uint32_t value) {
+    // cannot malloc size if > virtual addr space
     if (value > HEAP_MEM) { 
-            regs[R28] = 0;
-            return;
-    }
-    // initialize head bank
-    if (head_bank == NULL) {   
-        struct heap_bank my_head_bank;
-        head_bank = &my_head_bank;
-        head_bank->is_free = 1;
-        head_bank->addr = HEAP_START_ADDR;
-        head_bank->prev = NULL; 
-        head_bank->next = NULL;
-    } 
-
-    // B0 -> B2 -> B3 -> ... B127 
-    // alloc free bank OR create new bank and alloc if null
-    // if reach last bank B127 -> not able to allocate (0)
-    struct heap_bank * current = head_bank;
-    struct heap_bank * tmp_prev = NULL;
-    while (value > BANK_SZ) { 
-        if ( current_bank_sz() == NUM_BANK-1 || // at last bank (NULL)
-                (current == tail_bank && tail_bank != NULL) ) { // at last bank (Not NULL)
-            regs[R28] = 0;
-            return;
-        }
-
-        if (current == NULL || current->is_free) { 
-            alloc_bank(current, tmp_prev, BANK_SZ); // full alloc
-            *ini_addr =  (ini_addr == NULL) ? current->addr : *ini_addr; // update start addr if needed
-            value -= BANK_SZ;
-        }
-        tmp_prev = current;
-        current = current->next;
+        return 0;
     }
 
-    // alloc the remaining value to next free bank
-    // current bank free or null -> create & alloc
-    // current bank not free, traverse until next free/null, unless reach last bank
-    if (current == NULL || current->is_free) {
-        alloc_bank(current, tmp_prev, value);
-        *ini_addr =  (ini_addr == NULL) ? current->addr : *ini_addr; // update start addr if needed
-    } else {
-        current = current->next;
-        while (current != NULL && !current->is_free) {
-            if ( current == tail_bank ) { // reach last bank, and it is not free or null
-                regs[R28] = 0;
-                return;
+    // check if can allocate (consecutive free banks)
+    int consecutives = ceil((double) value / BANK_SZ);
+    int count = 0;
+    for (int i = 0; i < NUM_BANK; i++) {
+        count = (heap[i]->is_free) ? count + 1 : 0;
+        
+        // match consecutives required
+        if (count == consecutives) {
+            int start = i + 1 - consecutives;
+            // alloc
+            for (int j = 0; j < consecutives; j++) {
+                if (j < consecutives - 1) { // link banks (e.g. 3 consec link 2 times)
+                    heap[i]->next = heap[i+1];
+                    heap[i+1]->prev = heap[i];
+                }
+                int alloc_len = (value > BANK_SZ) ? BANK_SZ : value; // full partial alloc 
+                alloc_bank(heap[start + j], alloc_len); 
+                value -= alloc_len;
             }
-            tmp_prev = current;
-            current = current->next;
+            return heap[start]->addr; // update start addr
         }
-        alloc_bank(current, tmp_prev, value);
-        *ini_addr =  (ini_addr == NULL) ? current->addr : *ini_addr; // update start addr if needed
     }
-    regs[R28] = *ini_addr; // store start addr into R[28]
+    return 0;
 }
 
 // free bank with specified STARTING addr as value being stored
 // if addr was not allocated, an illegal operation error should be raised
 void VM_free(uint32_t addr, uint32_t instruc) {
-    struct heap_bank * current = head_bank; 
-    while (current != NULL) {
-        // free bank if addr matched and not already deallocated 
-        if (current->addr == addr && !current->is_free) {
-            current->is_free =  1;
+    for (int i = 0; i < NUM_BANK; i++) {
+        // free bank if addr matched, starter/unlinked bank(no prev), and is allocated 
+        if (heap[i]->addr == addr && heap[i]->prev == NULL && !heap[i]->is_free) {
+            heap[i]->is_free =  1;
+            struct heap_bank * current = heap[i]->next;
+            while (current != NULL) {
+                current->is_free = 1;
+                current = current->next;
+            }
             return;
         } 
-        current = current->next;
     }
     err_illegal_op(instruc); // addr not found, raise error
     return;
