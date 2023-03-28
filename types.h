@@ -18,7 +18,6 @@ struct mem {
     uint8_t inst_mem[INSTRUC_MEM];
     uint8_t data_mem[DATA_MEM];
     uint8_t vroutine_mem[VROUTINE_MEM];
-    uint8_t heap_mem[HEAP_MEM];
 };
 
 extern struct mem * memptr;
@@ -28,6 +27,7 @@ struct heap_bank {
     int is_free;
     uint32_t addr; // starting addr
     int alloc_len; // how many virtual addr does it map to
+    uint8_t bank_content[BANK_SZ]; // actual physical mem
     struct heap_bank * prev; // prev bank
     struct heap_bank * next; // next bank
 };

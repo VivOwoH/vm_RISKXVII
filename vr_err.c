@@ -64,7 +64,7 @@ void Dump_mem_word(uint32_t v, uint32_t instruc) {
 }
 
 int current_bank_sz() {
-    int size = 0; 
+    int size = 0;
     struct heap_bank * current = head_bank;
     while (current != NULL) {
         size++;
@@ -73,7 +73,6 @@ int current_bank_sz() {
     return size;
 }
 
-// -------------- malloc helper function ------------------
 void alloc_bank(struct heap_bank * bank, struct heap_bank * prev_bank, int len) {
     struct heap_bank new_bank;
     if (bank == NULL) { // NULL ptr (create bank first)
@@ -92,19 +91,6 @@ void alloc_bank(struct heap_bank * bank, struct heap_bank * prev_bank, int len) 
     // alloc bank
     bank->is_free = 0;
     bank->alloc_len = len;
-}
-
-// return a heap bank pointer if the addr is found, otherwise NULL
-struct heap_bank * check_valid_addr(uint32_t addr) {
-    struct heap_bank * current = head_bank; 
-    while (current != NULL) {
-        // addr matched and bank not already deallocated 
-        if (current->addr == addr && !current->is_free) {
-            return current;
-        } 
-        current = current->next;
-    }
-    return NULL;
 }
 
 // request a bank with the size of the value being stored as len 
@@ -173,12 +159,16 @@ void VM_malloc(uint32_t value) {
 // free bank with specified STARTING addr as value being stored
 // if addr was not allocated, an illegal operation error should be raised
 void VM_free(uint32_t addr, uint32_t instruc) {
-    struct heap_bank * found_bank = check_valid_addr(addr);
-    if (found_bank != NULL) {
-        found_bank->is_free =  1;
-    } else {
-        err_illegal_op(instruc); // addr not found, raise error
+    struct heap_bank * current = head_bank; 
+    while (current != NULL) {
+        // free bank if addr matched and not already deallocated 
+        if (current->addr == addr && !current->is_free) {
+            current->is_free =  1;
+            return;
+        } 
+        current = current->next;
     }
+    err_illegal_op(instruc); // addr not found, raise error
     return;
 }
 
