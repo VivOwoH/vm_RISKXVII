@@ -258,11 +258,11 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             Dump_mem_word(value, instruc);
             break;
         case (H_malloc):
-            // puts("---------malloc-------\n");
+            puts("---------malloc-------\n");
             VM_malloc(value);
             break;
         case (H_free):
-            // puts("---------free-------\n");
+            puts("---------free-------\n");
             VM_free(value, instruc);
             break;
         default:
