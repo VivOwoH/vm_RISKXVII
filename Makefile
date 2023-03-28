@@ -2,8 +2,7 @@ TARGET = vm_riskxvii
 
 CC = gcc
 
-CFLAGS     = -c -Wall -Wvla -Werror -O0 -g -std=c11
-ASAN_FLAGS = -fsanitize=address
+CFLAGS     = -c -Os -s -fno-ident -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -O0 -std=c11
 SRC        = vm_riskxvii.c instructions.c vr_err.c
 OBJ        = $(SRC:.c=.o)
 

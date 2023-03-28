@@ -200,10 +200,10 @@ void type_UJ(uint32_t instruc) {
 uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
     switch (addr) {
         case (C_Read_char):
-            puts("-------console read char-------"); 
+            // puts("-------console read char-------"); 
             return Console_Read_char();
         case (C_Read_int):
-            puts("---------console read int-------"); 
+            // puts("---------console read int-------"); 
             return Console_Read_int();
         default:
             // read from instruc or data allowed
@@ -229,38 +229,38 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
 uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc) {
     switch (addr) {
         case (C_Write_char):
-            puts("---------console write char-------"); 
+            // puts("---------console write char-------"); 
             Console_Write_char(value);
             break;
         case (C_Write_int):
-            puts("---------console write int-------"); 
+            // puts("---------console write int-------"); 
             Console_Write_int(value);
             break;
         case (C_Write_uint):
-            puts("---------console write uint-------"); 
+            // puts("---------console write uint-------"); 
             Console_Write_uint(value);
             break;
         case (Halt):
             Console_Halt();
             break;
         case (D_PC):
-            puts("---------dump pc-------\n"); 
+            // puts("---------dump pc-------\n"); 
             Dump_PC();
             break;
         case (D_reg_bank):
-            puts("---------dump reg bank-------\n"); 
+            // puts("---------dump reg bank-------\n"); 
             Dump_reg_bank();
             break;
         case (D_mem_word):
-            puts("---------dump mem word-------\n"); 
+            // puts("---------dump mem word-------\n"); 
             Dump_mem_word(value, instruc);
             break;
         case (H_malloc):
-            puts("---------malloc-------\n");
+            // puts("---------malloc-------\n");
             VM_malloc(value);
             break;
         case (H_free):
-            puts("---------free-------\n");
+            // puts("---------free-------\n");
             VM_free(value, instruc);
             break;
         default:
