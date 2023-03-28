@@ -216,9 +216,11 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
             }
             // read from heap bank: find heap bank that has addr in its range to check alloc
             else if (addr > HEAP_START_ADDR && addr < (HEAP_START_ADDR + HEAP_MEM)) {
-                // virtual addr -> physcial heap mem: (addr - HEAP_START_ADDR = heap->addr)
-                break;
-            } 
+                if (check_valid_addr(addr) != NULL) {
+                    // virtual addr -> physcial heap mem: (addr - HEAP_START_ADDR = heap->addr)
+                    return memptr->heap_mem[addr - HEAP_START_ADDR];
+                }
+            }  
             else {
                 err_illegal_op(instruc);
             }
