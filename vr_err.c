@@ -74,8 +74,8 @@ int current_bank_sz() {
 }
 
 void alloc_bank(struct heap_bank * bank, struct heap_bank * prev_bank, int len) {
+    struct heap_bank new_bank;
     if (bank == NULL) { // NULL ptr (create bank first)
-        struct heap_bank new_bank;
         bank = &new_bank;
         prev_bank->next = bank; // update next ptr of prev bank
         // **Special case: specify tail bank
