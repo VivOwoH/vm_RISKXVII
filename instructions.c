@@ -244,8 +244,8 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
                         }
                         // overflow -> next block in heap
                         for (int k = 0; k < overflow; k++) {
-                            // value += heap[i+1]->bank_content[heap[i+1]->addr + k] 
-                            //         << (8 * (overflow - 1 - k)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                            value += heap[i+1]->bank_content[heap[i+1]->addr + k] 
+                                    << (8 * (overflow - 1 - k)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
                         }
                         return value;
                     } 
@@ -306,7 +306,6 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             // write to heap bank: find heap bank that has addr in its range to check alloc
             // NOTE: can write up to 4 bytes
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
-                printf("addr=%d, num_cell=%d\n", addr, num_cell);
                 for (int i = 0; i < NUM_BANK; i++) {
                     uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
                     // check if valid offset from malloced address, and bank is allocated
@@ -323,8 +322,8 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                     else if (addr >= heap[i]->addr && (addr <= heap_end_addr) &&  ( (addr+num_cell-1) > heap_end_addr )
                             && !heap[i]->is_free && !heap[i+1]->is_free) {
 
-                        printf("heap[i]addr=%d, heap[i]alloclen=%d, last=%d, heap_last=%d\n", heap[i]->addr,heap[i]->alloc_len,
-                                                                 addr+num_cell-1, heap_end_addr);
+                        // printf("heap[i]addr=%d, heap[i]alloclen=%d, last=%d, heap_last=%d\n", heap[i]->addr,heap[i]->alloc_len,
+                        //                                          addr+num_cell-1, heap_end_addr);
                         int overflow = (addr+num_cell-1) - heap_end_addr;
 
                         for (int j = 0; j < (num_cell - overflow); j++) {
@@ -333,9 +332,9 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                         }
                         // overflow -> next block in heap
                         for (int k = 0; k < overflow; k++) {
-                            // heap[i+1]->bank_content[heap[i+1]->addr + k] 
-                            //         = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
-                            printf("overflow=%d, k=%d, i+1=%d | value shift=%x\n", overflow, k, i+1, value >> (8 * (overflow - 1 - k)) & 0xFF);
+                            heap[i+1]->bank_content[heap[i+1]->addr + k] 
+                                    = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
+                            // printf("overflow=%d, k=%d, i+1=%d | value shift=%x\n", overflow, k, i+1, value >> (8 * (overflow - 1 - k)) & 0xFF);
                         }
                         return 0;
                     }
