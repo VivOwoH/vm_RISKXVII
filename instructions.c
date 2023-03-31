@@ -305,10 +305,11 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             // write to heap bank: find heap bank that has addr in its range to check alloc
             // NOTE: can write up to 4 bytes
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
+                printf("addr=%d, num_cell=%d\n");
                 for (int i = 0; i < NUM_BANK; i++) {
                     // check if valid offset from malloced address, and bank is allocated
                     // case 1: in 1 block
-                    if (addr >= heap[i]->addr && (addr+num_cell-1) <= (heap[i]->addr + heap[i]->alloc_len - 1) 
+                    if (addr >= heap[i]->addr && ( (addr+num_cell-1) <= (heap[i]->addr + heap[i]->alloc_len - 1) )
                             && !heap[i]->is_free) {
                         for (int j = 0; j < num_cell; j++) {
                             heap[i]->bank_content[addr - heap[i]->addr + j] 
@@ -317,10 +318,11 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                         return 0;
                     } 
                     // case 2: in multiple blocks
-                    else if (addr >= heap[i]->addr && (addr+num_cell-1) > (heap[i]->addr + heap[i]->alloc_len - 1) 
+                    else if (addr >= heap[i]->addr && ( (addr+num_cell-1) > (heap[i]->addr + heap[i]->alloc_len - 1) )
                             && !heap[i]->is_free && !heap[i+1]->is_free) {
 
-                        printf("last=%d, heap_last=%d\n", addr+num_cell-1, heap[i]->addr + heap[i]->alloc_len - 1);
+                        printf("heap[i]addr=%d, heap[i]alloclen=%d, last=%d, heap_last=%d\n", heap[i]->addr,heap[i]->alloc_len,
+                                                                 addr+num_cell-1, heap[i]->addr + heap[i]->alloc_len - 1);
                         int overflow = (addr+num_cell-1) - (heap[i]->addr + heap[i]->alloc_len - 1);
 
                         for (int j = 0; j < (num_cell - overflow); j++) {
