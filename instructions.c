@@ -305,7 +305,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             // write to heap bank: find heap bank that has addr in its range to check alloc
             // NOTE: can write up to 4 bytes
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
-                printf("addr=%d, num_cell=%d\n");
+                printf("addr=%d, num_cell=%d\n", addr, num_cell);
                 for (int i = 0; i < NUM_BANK; i++) {
                     // check if valid offset from malloced address, and bank is allocated
                     // case 1: in 1 block
