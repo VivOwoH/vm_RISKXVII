@@ -542,8 +542,8 @@ void LUI(uint32_t rd, uint32_t imm) {
 
 void JAL(uint32_t rd, uint32_t imm) { 
     printf("%d: jal | rd=%d, ", regs[RPC], rd);
-    regs[RPC] = (regs[RPC] - 4) + (imm << 1); // jump to target (and no need to incremnent 4 to PC)
     regs[rd] = regs[RPC] + 4; // save PC value of next instruc
+    regs[RPC] = (regs[RPC] - 4) + (imm << 1); // jump to target (and no need to incremnent 4 to PC)
     printf("regs[rd]=%d, imm = %d, regs[RPC](x) = %d\n", regs[rd], imm, regs[RPC]+4);
 }
 
