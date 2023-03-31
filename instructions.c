@@ -328,8 +328,9 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                         }
                         // overflow -> next block in heap
                         for (int k = 0; k < overflow; k++) {
-                            heap[i+1]->bank_content[heap[i+1]->addr + k] 
-                                    = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
+                            // heap[i+1]->bank_content[heap[i+1]->addr + k] 
+                            //         = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
+                            printf("overflow=%d, k=%d, i+1=%d | value shift=%x", overflow, k, i+1, value >> (8 * (overflow - 1 - k)) & 0xFF);
                         }
                         return 0;
                     } 
