@@ -98,6 +98,8 @@ void fetch_instruc(struct mem * memptr) {
         - type U: 0110111 = 37 [lui]
         - type UJ: 1101111 = 6F [jal] */
 
+        printf("%x\n", instruc);
+
         switch (opcode)
         {
             case 0x33:
