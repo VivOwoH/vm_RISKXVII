@@ -542,7 +542,7 @@ void LUI(uint32_t rd, uint32_t imm) {
 
 void JAL(uint32_t rd, uint32_t imm) { 
     printf("%d: jal | rd=%d, ", regs[RPC], rd);
-    regs[rd] = regs[RPC] + 4; // save PC value of next instruc
+    regs[rd] = regs[RPC]; // save PC value of next instruc
     regs[RPC] = (regs[RPC] - 4) + (imm << 1); // jump to target (and no need to incremnent 4 to PC)
     printf("regs[rd]=%d, imm = %d, regs[RPC](x) = %d\n", regs[rd], imm, regs[RPC]+4);
 }
@@ -550,7 +550,7 @@ void JAL(uint32_t rd, uint32_t imm) {
 // Jump to target code address from a register, and save the PC value of next instruction into a register.
 void JALR(uint32_t rd, uint32_t rs1, uint32_t imm) {
     printf("%d: jalr rd=%d, rs1=%d, regs[rs1]=%d, imm=%d ", regs[RPC], rd, rs1, regs[rs1], imm);
-    regs[rd] = regs[RPC] + 4;
+    regs[rd] = regs[RPC];
     regs[RPC] = regs[rs1] + imm - 4; // and no need to incremnent 4 to PC
     printf("regs[RPC](x)=%d\n", regs[RPC]+4);
 }
