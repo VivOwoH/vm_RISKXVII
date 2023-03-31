@@ -312,6 +312,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                             heap[i]->bank_content[addr - heap[i]->addr + j] 
                                         = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
                         }
+                        return 0;
                     } 
                     // case 2: in multiple blocks
                     else if (addr >= heap[i]->addr && addr > (heap[i]->addr + heap[i]->alloc_len - 1) 
@@ -326,6 +327,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                             heap[i+1]->bank_content[heap[i+1]->addr + k] 
                                     = ( value >> (8 * (num_cell - overflow - 1 - k)) ) & 0xFF; 
                         }
+                        return 0;
                     } 
                 }
                 err_illegal_op(instruc); // reaching here means cannot find valid bank(s) to write
