@@ -286,11 +286,11 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             Dump_mem_word(value, instruc);
             break;
         case (H_malloc):
-            // puts("---------malloc-------\n");
+            puts("---------malloc-------\n");
             regs[R28] = VM_malloc(value);
             break;
         case (H_free):
-            // puts("---------free-------\n");
+            puts("---------free-------\n");
             VM_free(value, instruc);
             break;
         default:
@@ -549,7 +549,7 @@ void JAL(uint32_t rd, uint32_t imm) {
 
 // Jump to target code address from a register, and save the PC value of next instruction into a register.
 void JALR(uint32_t rd, uint32_t rs1, uint32_t imm) {
-    printf("%d: jalr rd=%d, regs[rs1]=%d, imm=%d ", regs[RPC], rd, regs[rs1], imm);
+    printf("%d: jalr rd=%d, rs1=%d, regs[rs1]=%d, imm=%d ", regs[RPC], rd, rs1, regs[rs1], imm);
     regs[rd] = regs[RPC] + 4;
     regs[RPC] = regs[rs1] + imm - 4; // and no need to incremnent 4 to PC
     printf("regs[RPC](x)=%d\n", regs[RPC]+4);
