@@ -320,7 +320,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                     else if (addr >= heap[i]->addr && (addr+num_cell-1) > (heap[i]->addr + heap[i]->alloc_len - 1) 
                             && !heap[i]->is_free && !heap[i+1]->is_free) {
 
-                        printf("last=%d, heap_last=%d\n", addr+num_cell-1, heap[i]->addr + heap[i]->alloc_len - 1)
+                        printf("last=%d, heap_last=%d\n", addr+num_cell-1, heap[i]->addr + heap[i]->alloc_len - 1);
                         int overflow = (addr+num_cell-1) - (heap[i]->addr + heap[i]->alloc_len - 1);
 
                         for (int j = 0; j < (num_cell - overflow); j++) {
