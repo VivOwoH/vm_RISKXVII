@@ -223,7 +223,7 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
                     // case 1: in 1 block
                     uint32_t value = 0;
 
-                    if (addr >= heap[i]->addr && addr <= (heap[i]->addr + heap[i]->alloc_len - 1) 
+                    if (addr >= heap[i]->addr && (addr+num_cell-1) <= (heap[i]->addr + heap[i]->alloc_len - 1) 
                             && !heap[i]->is_free) {
                         for (int j = 0; j < num_cell; j++) {
                             value += heap[i]->bank_content[addr - heap[i]->addr + j] 
@@ -232,9 +232,11 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
                         return value;
                     } 
                     // case 2: in multiple blocks
-                    else if (addr >= heap[i]->addr && addr > (heap[i]->addr + heap[i]->alloc_len - 1) 
+                    else if (addr >= heap[i]->addr && (addr+num_cell-1) > (heap[i]->addr + heap[i]->alloc_len - 1) 
                             && !heap[i]->is_free && !heap[i+1]->is_free) {
-                        int overflow = addr - (heap[i]->addr + heap[i]->alloc_len - 1);
+
+                        int overflow = (addr+num_cell-1) - (heap[i]->addr + heap[i]->alloc_len - 1);
+
                         for (int j = 0; j < (num_cell - overflow); j++) {
                             value += heap[i]->bank_content[addr - heap[i]->addr + j] 
                                         << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
@@ -306,7 +308,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                 for (int i = 0; i < NUM_BANK; i++) {
                     // check if valid offset from malloced address, and bank is allocated
                     // case 1: in 1 block
-                    if (addr >= heap[i]->addr && addr <= (heap[i]->addr + heap[i]->alloc_len - 1) 
+                    if (addr >= heap[i]->addr && (addr+num_cell-1) <= (heap[i]->addr + heap[i]->alloc_len - 1) 
                             && !heap[i]->is_free) {
                         for (int j = 0; j < num_cell; j++) {
                             heap[i]->bank_content[addr - heap[i]->addr + j] 
@@ -315,9 +317,11 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                         return 0;
                     } 
                     // case 2: in multiple blocks
-                    else if (addr >= heap[i]->addr && addr > (heap[i]->addr + heap[i]->alloc_len - 1) 
+                    else if (addr >= heap[i]->addr && (addr+num_cell-1) > (heap[i]->addr + heap[i]->alloc_len - 1) 
                             && !heap[i]->is_free && !heap[i+1]->is_free) {
-                        int overflow = addr - (heap[i]->addr + heap[i]->alloc_len - 1);
+                                
+                        int overflow = (addr+num_cell-1) - (heap[i]->addr + heap[i]->alloc_len - 1);
+
                         for (int j = 0; j < (num_cell - overflow); j++) {
                             heap[i]->bank_content[addr - heap[i]->addr + j] 
                                         = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
