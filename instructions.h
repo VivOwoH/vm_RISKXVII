@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc);
+uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc);
+
 // decode
 void type_R(uint32_t i);
 void type_I(uint32_t i, uint32_t op);

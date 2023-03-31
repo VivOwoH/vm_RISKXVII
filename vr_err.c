@@ -109,7 +109,8 @@ void VM_free(uint32_t addr, uint32_t instruc) {
     for (int i = 0; i < NUM_BANK; i++) {
         // free bank if addr matched, starter/unlinked bank(no prev), and is allocated 
         if (heap[i]->addr == addr && heap[i]->prev == NULL && !heap[i]->is_free) {
-            heap[i]->is_free =  1;
+            heap[i]->is_free = 1; // free current
+            // free consec linked bank if exist
             struct heap_bank * current = heap[i]->next;
             while (current != NULL) {
                 current->is_free = 1;

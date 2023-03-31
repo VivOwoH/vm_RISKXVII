@@ -46,10 +46,12 @@ int main(int argc, char **argv) {
     }
 
     // if (strcmp(argv[2], "malloc") == 0) {
-    //     printf("reg[28]=%.x\n", VM_malloc(80));
-    //     printf("reg[28]=%.x\n", VM_malloc(40));
-    //     for (int i = 0; i < BANK_SZ; i++)
-    //         printf("%d ", heap[0]->bank_content[i]);
+    //     printf("reg[28]=%x\n", VM_malloc(128));
+    //     VM_free(0xb700, 0x00e7a023);
+    //     // for (int i = 0; i < BANK_SZ; i++)
+    //     //     printf("%d ", heap[0]->bank_content[i]);
+    //     printf("%d\n", mem_read(0xb700, 1, 0x00e71023));
+    //     puts("end of malloc test");
     // }
 
     map_image(fp, memptr);
