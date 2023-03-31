@@ -219,11 +219,12 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
             // NOTE: can read up to 4 bytes
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
                 for (int i = 0; i < NUM_BANK; i++) {
+                    uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
                     // check if valid offset from malloced address, and bank is allocated
                     // case 1: in 1 block
                     uint32_t value = 0;
 
-                    if (addr >= heap[i]->addr && (addr+num_cell-1) <= (heap[i]->addr + heap[i]->alloc_len - 1) 
+                    if (addr >= heap[i]->addr && (addr+num_cell-1) <= heap_end_addr 
                             && !heap[i]->is_free) {
                         for (int j = 0; j < num_cell; j++) {
                             value += heap[i]->bank_content[addr - heap[i]->addr + j] 
@@ -232,10 +233,10 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
                         return value;
                     } 
                     // case 2: in multiple blocks
-                    else if (addr >= heap[i]->addr && (addr+num_cell-1) > (heap[i]->addr + heap[i]->alloc_len - 1) 
+                    else if (addr >= heap[i]->addr && (addr <= heap_end_addr) && (addr+num_cell-1) > heap_end_addr
                             && !heap[i]->is_free && !heap[i+1]->is_free) {
 
-                        int overflow = (addr+num_cell-1) - (heap[i]->addr + heap[i]->alloc_len - 1);
+                        int overflow = (addr+num_cell-1) - heap_end_addr;
 
                         for (int j = 0; j < (num_cell - overflow); j++) {
                             value += heap[i]->bank_content[addr - heap[i]->addr + j] 
@@ -307,9 +308,10 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
                 printf("addr=%d, num_cell=%d\n", addr, num_cell);
                 for (int i = 0; i < NUM_BANK; i++) {
+                    uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
                     // check if valid offset from malloced address, and bank is allocated
                     // case 1: in 1 block
-                    if (addr >= heap[i]->addr && ( (addr+num_cell-1) <= (heap[i]->addr + heap[i]->alloc_len - 1) )
+                    if (addr >= heap[i]->addr && ( (addr+num_cell-1) <= heap_end_addr )
                             && !heap[i]->is_free) {
                         for (int j = 0; j < num_cell; j++) {
                             heap[i]->bank_content[addr - heap[i]->addr + j] 
@@ -318,12 +320,12 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                         return 0;
                     } 
                     // case 2: in multiple blocks
-                    else if (addr >= heap[i]->addr && ( (addr+num_cell-1) > (heap[i]->addr + heap[i]->alloc_len - 1) )
+                    else if (addr >= heap[i]->addr && (addr <= heap_end_addr) &&  ( (addr+num_cell-1) > heap_end_addr )
                             && !heap[i]->is_free && !heap[i+1]->is_free) {
 
                         printf("heap[i]addr=%d, heap[i]alloclen=%d, last=%d, heap_last=%d\n", heap[i]->addr,heap[i]->alloc_len,
-                                                                 addr+num_cell-1, heap[i]->addr + heap[i]->alloc_len - 1);
-                        int overflow = (addr+num_cell-1) - (heap[i]->addr + heap[i]->alloc_len - 1);
+                                                                 addr+num_cell-1, heap_end_addr);
+                        int overflow = (addr+num_cell-1) - heap_end_addr;
 
                         for (int j = 0; j < (num_cell - overflow); j++) {
                             heap[i]->bank_content[addr - heap[i]->addr + j] 
@@ -336,7 +338,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
                             printf("overflow=%d, k=%d, i+1=%d | value shift=%x\n", overflow, k, i+1, value >> (8 * (overflow - 1 - k)) & 0xFF);
                         }
                         return 0;
-                    } 
+                    }
                 }
                 err_illegal_op(instruc); // reaching here means cannot find valid bank(s) to write
             } 
