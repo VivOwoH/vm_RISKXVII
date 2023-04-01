@@ -5,9 +5,6 @@
 #include "instructions.h"
 #include "vr_err.h"
 
-#define LOAD 0
-#define STORE 1
-
 uint32_t sign_extend(uint32_t n, int imm_bits) {
     // check MSB 1 or 0
     // MSB 1: sign extend left with 1
@@ -214,11 +211,11 @@ uint32_t heap_read_write(uint32_t addr, int num_cell, uint32_t instruc, uint32_t
         if (addr >= heap[i]->addr && (addr+num_cell-1) <= heap_end_addr 
                 && !heap[i]->is_free) {
             for (int j = 0; j < num_cell; j++) {
-                if (mode == LOAD) {
+                if (mode == 0) {
                     result += heap[i]->bank_content[addr - heap[i]->addr + j] 
                             << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
                 } 
-                else if (mode == STORE) {
+                else if (mode == 1) {
                     heap[i]->bank_content[addr - heap[i]->addr + j] 
                             = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
                 }
@@ -232,22 +229,22 @@ uint32_t heap_read_write(uint32_t addr, int num_cell, uint32_t instruc, uint32_t
             int overflow = (addr+num_cell-1) - heap_end_addr;
 
             for (int j = 0; j < (num_cell - overflow); j++) {
-                if (mode == LOAD) {
+                if (mode == 0) {
                     result += heap[i]->bank_content[addr - heap[i]->addr + j] 
                             << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
                 }
-                else if (mode == STORE) {
+                else if (mode == 1) {
                     heap[i]->bank_content[addr - heap[i]->addr + j] 
                             = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
                 }
             }
             // overflow -> next block in heap
             for (int k = 0; k < overflow; k++) {
-                if (mode == LOAD) {
+                if (mode == 0) {
                     result += heap[i+1]->bank_content[heap[i+1]->addr + k] 
                         << (8 * (overflow - 1 - k)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
                 }
-                else if (mode == STORE) {
+                else if (mode == 1) {
                     heap[i+1]->bank_content[heap[i+1]->addr + k] 
                         = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
                 }
@@ -279,7 +276,7 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
             // read from heap bank: find heap bank that has addr in its range to check alloc
             // NOTE: can read up to 4 bytes
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
-                return heap_read_write(addr, num_cell, instruc, 0, LOAD);
+                return heap_read_write(addr, num_cell, instruc, 0, 0); // load = 0
             } 
             else {
                 err_illegal_op(instruc);
@@ -335,7 +332,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             // write to heap bank: find heap bank that has addr in its range to check alloc
             // NOTE: can write up to 4 bytes
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
-                return heap_read_write(addr, num_cell, instruc, value, STORE);
+                return heap_read_write(addr, num_cell, instruc, value, 1); // store = 1
             } 
             else {
                 err_illegal_op(instruc);
