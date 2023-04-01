@@ -3,7 +3,8 @@ TEST_TARGET = autotest.sh
 
 CC = gcc
 
-CFLAGS     = -c -s -fno-ident -fno-exceptions -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -Os -std=c11
+CFLAGS     = -c -s -Wall -Wvla -Werror -Os -std=c11
+OPT_FLAGS = -fno-ident -fno-exceptions -fno-asynchronous-unwind-tables -ffunction-sections -fdata-sections -Wl,--gc-sections 
 LIB_FLAGS = -lm
 SRC        = vm_riskxvii.c instructions.c func_err.c
 OBJ        = $(SRC:.c=.o)
@@ -16,7 +17,7 @@ $(TARGET):$(OBJ)
 .SUFFIXES: .c .o
 
 .c.o:
-	 $(CC) $(CFLAGS) $(LIB_FLAGS) $<
+	 $(CC) $(CFLAGS) $(OPT_FLAGS) $(LIB_FLAGS) $<
 
 run:
 	./$(TARGET)
