@@ -53,5 +53,5 @@ Exit codes:
 -Os: optimize size
 -s: strip the binary
 -fno-ident: no compiler name and version information
--fno-exception: omit code to proprogate exception handling
+-fno-exceptions: omit code to proprogate exception handling
 -fno-asynchronous-unwind-tables: omit static unwind table
