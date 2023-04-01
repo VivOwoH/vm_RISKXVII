@@ -418,26 +418,16 @@ void I_operation(int command, uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t 
 
 // ------------------------- type S --------------------------------
 void S_operation(int command, uint32_t rs1, uint32_t rs2, uint32_t imm, uint32_t instruc) {
-    switch (command)
-    {
-    case SB: // store a 8-bit value to memory from a register
-        // printf("%d: sb | rs1=%d, rs2=%d, imm=%d \n", regs[RPC], rs1, rs2, imm);
-        mem_write((regs[rs1] + imm), regs[rs2] & 0xFF, 1, instruc);
-        break;
-
-    case SH: // store a 16-bit value to memory from a register
-        // printf("%d: sh | rs1=%d, rs2=%d, imm=%d\n", regs[RPC], rs1, rs2, imm);
-        mem_write((regs[rs1] + imm), regs[rs2] & 0xFFFF, 2, instruc);
-        break;
-
-    case SW: // store a 32-bit value to memory from a register
-        // printf("%d: sw | rs1=%d, rs2=%d, imm=%d | addr=%.2x, value=%d\n", regs[RPC], rs1, rs2, imm, regs[rs1]+imm, regs[rs2]);
-        mem_write((regs[rs1] + imm), regs[rs2], 4, instruc);
-        break;
-
-    default:
-        break;
-    }
+    // SB: 8 bit; SH: 16 bit; SW: 32 bit
+    int num_cell = 1; // read how much mem
+    num_cell = (command==SH) ? 2: num_cell;
+    num_cell = (command==SW) ? 4: num_cell;
+    uint32_t value = regs[rs2];
+    // mask to 8 or 16 bits
+    value = (command==SB) ? regs[rs2] & 0xFF: value;
+    value = (command==SH) ? regs[rs2] & 0xFFFF: value;
+    // write to memory
+    mem_write((regs[rs1] + imm), value, num_cell, instruc);
 }
 
 // ------------------------- type SB --------------------------------
