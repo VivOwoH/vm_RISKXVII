@@ -6,6 +6,10 @@
 
 #include <stdint.h>
 
+// memory load/store helper
+uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc);
+uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc);
+
 // virtual routines
 void Console_Write_char(uint32_t value);
 void Console_Write_int(uint32_t value);
