@@ -45,17 +45,9 @@ int main(int argc, char **argv) {
         heap[i]->next = NULL;
     }
 
-    // if (strcmp(argv[2], "malloc") == 0) {
-    //     printf("reg[28]=%x\n", VM_malloc(128));
-    //     VM_free(0xb700, 0x00e7a023);
-    //     // for (int i = 0; i < BANK_SZ; i++)
-    //     //     printf("%d ", heap[0]->bank_content[i]);
-    //     printf("%d\n", mem_read(0xb700, 1, 0x00e71023));
-    //     puts("end of malloc test");
-    // }
-
     map_image(fp, memptr);
     fetch_instruc(memptr);
+    return 0;
 }
 
 void map_image(FILE * fp, struct mem * memptr) {
@@ -67,7 +59,8 @@ void map_image(FILE * fp, struct mem * memptr) {
     fseek(fp, 0, SEEK_SET); // rewind
 
     if (size > sizeof(memptr->inst_mem)+ sizeof(memptr->data_mem)) {
-        puts("File larger than expected");
+        puts("File larger than expected.");
+        exit(6);
     }
 
     // sizeof each mem = 1 byte
@@ -129,7 +122,7 @@ void fetch_instruc(struct mem * memptr) {
             default:
                 err_not_implemented(instruc);
         }
-        regs[R0] = 0;
+        regs[R0] = 0; // clear register 0
         regs[RPC] += 4; // increment PC 
     }
 }

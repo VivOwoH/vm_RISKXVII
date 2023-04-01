@@ -1,0 +1,56 @@
+## Memory
+- 0x0000 - 0x3ff: Instruction Memory - Contains 2^10 of bytes for text segment. (1024 bytes)
+- 0x0400 - 0x7ff: Data Memory - Contains 2^10 of bytes for global variables, and function stack. (1024 bytes)
+- 0x0800 - 0x8ff: Virtual Routines - Accesses to these address will cause special operations to be called. (255 bytes)
+- 0xb700 +: 128 Heap Banks including meta information, and a 64-bytes array of dynamically allocate-able memory
+
+
+## Registers
+32 general purpose registers (each 4 bytes)
+- R0 maintains 0
+- R1~R31: general purpose
+- R32 = PC 
+
+
+## Instructions
+*32 bits instruction with right most 7 bits as opcode*
+
+[Arithmetic and Logic]
+- type R: 0110011
+- type I: 0010011
+- type U: 0110111
+
+[Memory access]
+- type I: 0000011
+- tyype S: 0100011
+
+[Program Flow Operations]
+- type R: 0110011
+- type I: 0010011 / 1100111
+- type SB: 1100011
+- type UJ: 1101111
+
+Summary:
+- type R: 0110011
+- type I: 0010011 / 0000011 / 1100111
+- type U: 0110111
+- type S: 0100011
+- type SB: 1100011
+- type UJ: 1101111
+
+
+## Error handling
+Exit codes:
+1 - invalid command-line argument provided
+2 - cannot open image file specified
+3 - normal halt operation
+4 - instruction not implemented
+5 - illegal operation (all invalid memory accesses trigger this)
+6 - Reject file larger than expected size (2048 bytes)
+
+
+## Flags used to reduce executable size
+-Os: optimize for size is an obvious one
+-s: strip the binary, which you've already tried
+-fno-ident: GCC outputs an entire section to advertise itself, which, once padded/aligned is significant in a small program
+-fno-asynchronous-unwind-tables: omit stack frame debug information stack that's not stripped otherwise

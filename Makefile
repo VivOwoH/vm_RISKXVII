@@ -1,27 +1,31 @@
 TARGET = vm_riskxvii
+TEST_TARGET = autotest.sh
 
 CC = gcc
 
-CFLAGS     = -c -Wall -Wvla -Werror -O0 -g -std=c11
-ASAN_FLAGS = -lm -fsanitize=address
+CFLAGS     = -c -Os -s -fno-ident -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -O0 -std=c11
+LIB_FLAGS = -lm
 SRC        = vm_riskxvii.c instructions.c vr_err.c
 OBJ        = $(SRC:.c=.o)
 
 all:$(TARGET)
 
 $(TARGET):$(OBJ)
-	$(CC) $(ASAN_FLAGS) -o $@ $(OBJ)
+	$(CC) -o $@ $(OBJ) $(LIB_FLAGS)
 
 .SUFFIXES: .c .o
 
 .c.o:
-	 $(CC) $(CFLAGS) $(ASAN_FLAGS) $<
+	 $(CC) $(CFLAGS) $(LIB_FLAGS) $<
 
 run:
 	./$(TARGET)
 
-test:
-	echo what are we testing?!
+tests:
+	echo "additional c file for tests":
+
+run_tests:
+	./$(TEST_TARGET)
 
 clean:
 	rm -f *.o *.obj $(TARGET)
