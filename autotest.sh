@@ -1,6 +1,6 @@
-gcc --coverage -c -Os -s -fno-ident -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -O0 -g -std=c11 -lm vm_riskxvii.c
-gcc --coverage -c -Os -s -fno-ident -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -O0 -g -std=c11 -lm instructions.c
-gcc --coverage -c -Os -s -fno-ident -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -O0 -g -std=c11 -lm vr_err.c
+gcc --coverage -c -Wall -Wvla -Werror -O0 -g -std=c11 -lm vm_riskxvii.c
+gcc --coverage -c -Wall -Wvla -Werror -O0 -g -std=c11 -lm instructions.c
+gcc --coverage -c -Wall -Wvla -Werror -O0 -g -std=c11 -lm vr_err.c
 
 gcc --coverage -fsanitize=address -o vm_riskxvii vm_riskxvii.o instructions.o vr_err.o -lm
 

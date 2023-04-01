@@ -205,8 +205,9 @@ void type_UJ(uint32_t instruc) {
 // load = 0; store = 1
 // **Load does not need "value" (thus 0)
 uint32_t heap_read_write(uint32_t addr, int num_cell, uint32_t instruc, uint32_t value, int mode) {
-    for (int i = 0; i < NUM_BANK; i++) {
+    for (int i = 0; i < NUM_BANK; i++) {   
         uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
+
         // check if valid offset from malloced address, and bank is allocated
         // case 1: in 1 block
         uint32_t result = 0;
