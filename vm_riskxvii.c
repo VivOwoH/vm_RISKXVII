@@ -4,7 +4,7 @@
 #include <string.h>
 #include "types.h"
 #include "instructions.h"
-#include "vr_err.h"
+#include "func_err.h"
 
 // MEMORY
 struct mem mymem;

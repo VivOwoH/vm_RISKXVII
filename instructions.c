@@ -3,10 +3,7 @@
 #include <stdint.h>
 #include "types.h"
 #include "instructions.h"
-#include "vr_err.h"
-
-#define LOAD 0
-#define STORE 1
+#include "func_err.h"
 
 uint32_t sign_extend(uint32_t n, int imm_bits) {
     // check MSB 1 or 0
@@ -200,65 +197,6 @@ void type_UJ(uint32_t instruc) {
 }   
 
 // ------------------------- MEMORY -----------------------------
-
-// helper function for load/store in heap
-// load = 0; store = 1
-// **Load does not need "value" (thus 0)
-uint32_t heap_read_write(uint32_t addr, int num_cell, uint32_t instruc, uint32_t value, int mode) {
-    for (int i = 0; i < NUM_BANK; i++) {   
-        uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
-
-        // check if valid offset from malloced address, and bank is allocated
-        // case 1: in 1 block
-        uint32_t result = 0;
-
-        if (addr >= heap[i]->addr && (addr+num_cell-1) <= heap_end_addr 
-                && !heap[i]->is_free) {
-            for (int j = 0; j < num_cell; j++) {
-                if (mode == LOAD) {
-                    result += heap[i]->bank_content[addr - heap[i]->addr + j] 
-                            << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
-                } 
-                else if (mode == STORE) {
-                    heap[i]->bank_content[addr - heap[i]->addr + j] 
-                            = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
-                }
-            }
-            return result;
-        } 
-        // case 2: in multiple blocks
-        else if (addr >= heap[i]->addr && (addr <= heap_end_addr) && (addr+num_cell-1) > heap_end_addr
-                && !heap[i]->is_free && !heap[i+1]->is_free) {
-
-            int overflow = (addr+num_cell-1) - heap_end_addr;
-
-            for (int j = 0; j < (num_cell - overflow); j++) {
-                if (mode == LOAD) {
-                    result += heap[i]->bank_content[addr - heap[i]->addr + j] 
-                            << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
-                }
-                else if (mode == STORE) {
-                    heap[i]->bank_content[addr - heap[i]->addr + j] 
-                            = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
-                }
-            }
-            // overflow -> next block in heap
-            for (int k = 0; k < overflow; k++) {
-                if (mode == LOAD) {
-                    result += heap[i+1]->bank_content[heap[i+1]->addr + k] 
-                        << (8 * (overflow - 1 - k)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
-                }
-                else if (mode == STORE) {
-                    heap[i+1]->bank_content[heap[i+1]->addr + k] 
-                        = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
-                }
-            }
-            return result;
-        } 
-    }
-    err_illegal_op(instruc); // reaching here means cannot find valid bank(s)
-    return 0; // error
-}
 
 uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
     switch (addr) {

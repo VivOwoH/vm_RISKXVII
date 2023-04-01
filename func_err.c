@@ -2,9 +2,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
-#include "vr_err.h"
+#include "func_err.h"
 #include "types.h"
 
+// -------------------- Virtual Routines ----------------------
 // print value stored as a single ASCII encoded character to stdout
 void Console_Write_char(uint32_t value) {
     fprintf(stdout, "%c", value);
@@ -56,16 +57,19 @@ void Dump_reg_bank() {
     }
 }
 
-// print the value of M[v] in lower case hexadecimal format to stdout 
-// v is the value being stored interpreted as an 32-bit unsigned integer
+// print the value of M[v] (1-byte) in lower case hexadecimal format to stdout 
+// v is the value being stored interpreted as an 4-bytes unsigned integer
 void Dump_mem_word(uint32_t v, uint32_t instruc) {
-    if (v >= (INSTRUC_MEM + DATA_MEM)) {
-        err_illegal_op(instruc);
-    } else {
+    if (v < (INSTRUC_MEM + DATA_MEM)) {
         fprintf(stdout, "%x\n", memptr->inst_data_mem[v]);
+    } else if (v >= HEAP_START_ADDR && v < HEAP_START_ADDR + HEAP_MEM) {
+        fprintf(stdout, "%x\n", heap_read_write(v, 1, instruc, 0, 0));
+    } else {
+        err_illegal_op(instruc);
     }
 }
 
+// -------------------- Heap methods ----------------------
 void alloc_bank(struct heap_bank * bank, int len) {
     bank->is_free = 0;
     bank->alloc_len = len;
@@ -125,6 +129,66 @@ void VM_free(uint32_t addr, uint32_t instruc) {
     return;
 }
 
+// helper function for load/store in heap
+// load = 0; store = 1
+// **Load does not need "value" (thus 0)
+uint32_t heap_read_write(uint32_t addr, int num_cell, uint32_t instruc, uint32_t value, int mode) {
+    for (int i = 0; i < NUM_BANK; i++) {   
+        uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
+
+        // check if valid offset from malloced address, and bank is allocated
+        // case 1: in 1 block
+        uint32_t result = 0;
+
+        if (addr >= heap[i]->addr && (addr+num_cell-1) <= heap_end_addr 
+                && !heap[i]->is_free) {
+            for (int j = 0; j < num_cell; j++) {
+                if (mode == LOAD) {
+                    result += heap[i]->bank_content[addr - heap[i]->addr + j] 
+                            << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                } 
+                else if (mode == STORE) {
+                    heap[i]->bank_content[addr - heap[i]->addr + j] 
+                            = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
+                }
+            }
+            return result;
+        } 
+        // case 2: in multiple blocks
+        else if (addr >= heap[i]->addr && (addr <= heap_end_addr) && (addr+num_cell-1) > heap_end_addr
+                && !heap[i]->is_free && !heap[i+1]->is_free) {
+
+            int overflow = (addr+num_cell-1) - heap_end_addr;
+
+            for (int j = 0; j < (num_cell - overflow); j++) {
+                if (mode == LOAD) {
+                    result += heap[i]->bank_content[addr - heap[i]->addr + j] 
+                            << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                }
+                else if (mode == STORE) {
+                    heap[i]->bank_content[addr - heap[i]->addr + j] 
+                            = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
+                }
+            }
+            // overflow -> next block in heap
+            for (int k = 0; k < overflow; k++) {
+                if (mode == LOAD) {
+                    result += heap[i+1]->bank_content[heap[i+1]->addr + k] 
+                        << (8 * (overflow - 1 - k)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                }
+                else if (mode == STORE) {
+                    heap[i+1]->bank_content[heap[i+1]->addr + k] 
+                        = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
+                }
+            }
+            return result;
+        } 
+    }
+    err_illegal_op(instruc); // reaching here means cannot find valid bank(s)
+    return 0; // error
+}
+
+// -------------------- Error handling ----------------------
 void err_not_implemented(uint32_t instruc) {
     printf("Instruction Not Implemented: 0x%.8x\n", instruc);
     Dump_reg_bank();

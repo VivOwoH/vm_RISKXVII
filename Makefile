@@ -5,7 +5,7 @@ CC = gcc
 
 CFLAGS     = -c -s -fno-ident -fno-exceptions -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -Os -std=c11
 LIB_FLAGS = -lm
-SRC        = vm_riskxvii.c instructions.c vr_err.c
+SRC        = vm_riskxvii.c instructions.c func_err.c
 OBJ        = $(SRC:.c=.o)
 
 all:$(TARGET)
