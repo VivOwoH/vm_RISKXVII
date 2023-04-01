@@ -4,7 +4,7 @@ TEST_TARGET = autotest.sh
 CC = gcc
 
 CFLAGS     = -c -s -Wall -Wvla -Werror -Os -std=c11
-OPT_FLAGS = -fno-ident -fno-exceptions -fno-asynchronous-unwind-tables -m32
+OPT_FLAGS = -fno-ident -fno-exceptions -fno-asynchronous-unwind-tables
 LIB_FLAGS = -lm
 SRC        = vm_riskxvii.c instructions.c func_err.c
 OBJ        = $(SRC:.c=.o)
@@ -12,7 +12,7 @@ OBJ        = $(SRC:.c=.o)
 all:$(TARGET)
 
 $(TARGET):$(OBJ)
-	$(CC) -o $@ $(OBJ) $(LIB_FLAGS) -m32
+	$(CC) -o $@ $(OBJ) $(LIB_FLAGS)
 
 .SUFFIXES: .c .o
 
