@@ -366,33 +366,24 @@ void I_operation(int command, uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t 
         // printf("regs[RPC](x)=%d\n", regs[RPC]+4);
         break;
 
-    case LB: // Load a 8-bit value from memory into a register, and sign extend the value
-        // i.e. LSB 8 bits of value returned from reading mem
-        // printf("%d: lb | rs1=%d, imm=%d | regs[rd] = %d\n", regs[RPC], rs1, imm, regs[rd]);
-        regs[rd] = sign_extend(mem_read(regs[rs1] + imm, 1, instruc), 8);
-        break;
-
-    case LH: // Load a 16-bit value from memory into a register, and sign extend the value
-        // i.e. LSB 16 bits of value returned from reading mem
-        // printf("%d: lh | regs[rd] = %d\n", regs[RPC], regs[rd]);
-        regs[rd] = sign_extend(mem_read(regs[rs1] + imm, 2, instruc), 16);
-        break;
-
-    case LW: // Load a 32-bit value from memory into a register
-        // printf("%d: lw | rd=%d, rs1=%d, imm = %d | addr=%.2x\n", regs[RPC], rd, rs1, imm, regs[rs1]+imm);
-        regs[rd] = mem_read(regs[rs1] + imm, 4, instruc);
-        // printf("result: regs[rd]=%d\n", regs[rd]);
-        break;
-
-    case LBU: // Load a 8-bit value from memory into a register
-        // printf("%d: lbu | rd=%d, rs1=%d, imm=%d, addr=%d\n", regs[RPC], rd, rs1, imm, regs[rs1]+imm);
-        regs[rd] = mem_read(regs[rs1] + imm, 1, instruc);
-        // printf("result regs[rd]=%d\n", regs[rd]);
-        break;
-
-    case LHU: // Load a 16-bit value from memory into a register
-        // printf("%d: lhu | regs[rd] = %d\n", regs[RPC], regs[rd]);
-        regs[rd] = mem_read(regs[rs1] + imm, 2, instruc);
+    // Load value from mem into a register
+    // LB, LBU: 1 cell; LH, LHU: 2 cells; LW: 4 cells
+    // LB(8), LH(16): sign extend
+    case LB:
+    case LBU:
+    case LH:
+    case LHU:
+    case LW: {
+        int num_cell = 1; // read how much mem
+        num_cell = (command==LH || command==LHU) ? 2 : num_cell;
+        num_cell = (command==LW) ? 4 : num_cell;
+        uint32_t value = mem_read(regs[rs1] + imm, num_cell, instruc);
+        // sign extend if required
+        value = (command==LB) ? sign_extend(value, 8) : value;
+        value = (command==LH) ? sign_extend(value, 16) : value;
+        // load into register
+        regs[rd] = value; 
+        }
         break;
 
     case SLTI: // Set rd to 1 if the value in rs1 is smaller than imm, 0 otherwise
