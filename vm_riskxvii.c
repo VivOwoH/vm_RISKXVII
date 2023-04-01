@@ -17,7 +17,7 @@ uint32_t regs[NUM_REG] = {0};
 struct heap_bank * heap[NUM_BANK] = {NULL};
 
 // FORWARD DECLARATIONS
-void map_image(FILE *, struct mem *);
+int map_image(FILE *, struct mem *);
 void fetch_instruc(struct mem *);
 
 
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void map_image(FILE * fp, struct mem * memptr) {
+int map_image(FILE * fp, struct mem * memptr) {
 
     int size; // given file should be 2048 bytes
     
@@ -58,25 +58,25 @@ void map_image(FILE * fp, struct mem * memptr) {
     size = ftell(fp); // get current fp
     fseek(fp, 0, SEEK_SET); // rewind
 
-    if (size > sizeof(memptr->inst_mem)+ sizeof(memptr->data_mem)) {
+    if (size > sizeof(memptr->inst_data_mem)) {
         puts("File larger than expected.");
         exit(6);
     }
 
     // sizeof each mem = 1 byte
-    fread(memptr->inst_mem, sizeof(memptr->inst_mem[0]), sizeof(memptr->inst_mem)/sizeof(memptr->inst_mem[0]), fp);
-    fread(memptr->data_mem, sizeof(memptr->data_mem[0]), sizeof(memptr->data_mem)/sizeof(memptr->data_mem[0]), fp);
+    return fread(memptr->inst_data_mem, sizeof(memptr->inst_data_mem[0]), 
+                    sizeof(memptr->inst_data_mem)/sizeof(memptr->inst_data_mem[0]), fp);
 }
 
 void fetch_instruc(struct mem * memptr) {
     
-    while (regs[RPC] < sizeof(memptr->inst_mem)) {
+    while (regs[RPC] < INSTRUC_MEM) {
         // read 4 uint8 to get uint32 instruction
         // LSB to MSB
-        uint8_t token1 = memptr->inst_mem[regs[RPC]++];
-        uint8_t token2 = memptr->inst_mem[regs[RPC]++];
-        uint8_t token3 = memptr->inst_mem[regs[RPC]++];
-        uint8_t token4 = memptr->inst_mem[regs[RPC]++]; // accessing parts of instruc
+        uint8_t token1 = memptr->inst_data_mem[regs[RPC]++];
+        uint8_t token2 = memptr->inst_data_mem[regs[RPC]++];
+        uint8_t token3 = memptr->inst_data_mem[regs[RPC]++];
+        uint8_t token4 = memptr->inst_data_mem[regs[RPC]++]; // accessing parts of instruc
         regs[RPC] -= 4; // reset to start of instruc
         uint32_t instruc = (token4 << 24) + (token3 << 16) + (token2 << 8) + token1;
         

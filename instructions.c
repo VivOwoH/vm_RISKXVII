@@ -257,7 +257,7 @@ uint32_t heap_read_write(uint32_t addr, int num_cell, uint32_t instruc, uint32_t
         } 
     }
     err_illegal_op(instruc); // reaching here means cannot find valid bank(s)
-    return 1; // error
+    return 0; // error
 }
 
 uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
@@ -273,7 +273,9 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
             if (addr < (INSTRUC_MEM + DATA_MEM)) {
                 uint32_t result = 0;
                 for (int i = 0; i < num_cell; i++) {
-                    result += memptr->inst_mem[addr+i] << (8 * (num_cell-1-i)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                    if (addr + i >= INSTRUC_MEM + DATA_MEM) // cells outside range
+                        err_illegal_op(instruc);
+                    result += memptr->inst_data_mem[addr+i] << (8 * (num_cell-1-i)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
                 }
                 return result;
             }
@@ -330,7 +332,9 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             // write to data allowed, not write to instruc
             if (addr >= INSTRUC_MEM && addr < (INSTRUC_MEM + DATA_MEM)) {
                 for (int i = 0; i < num_cell; i++) {
-                    memptr->inst_mem[addr+i] = ( value >> (8 * (num_cell-1-i)) ) & 0xFF; 
+                    if (addr + i >= INSTRUC_MEM + DATA_MEM) // cells outside range
+                        err_illegal_op(instruc);
+                    memptr->inst_data_mem[addr+i] = ( value >> (8 * (num_cell-1-i)) ) & 0xFF; 
                 }
             }
             // write to heap bank: find heap bank that has addr in its range to check alloc

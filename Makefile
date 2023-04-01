@@ -3,7 +3,7 @@ TEST_TARGET = autotest.sh
 
 CC = gcc
 
-CFLAGS     = -c -Os -s -fno-ident -fno-exceptions -fno-asynchronous-unwind-tables -m32 -Wall -Wvla -Werror -std=c11
+CFLAGS     = -c -s -fno-ident -fno-exceptions -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -Os -std=c11
 LIB_FLAGS = -lm
 SRC        = vm_riskxvii.c instructions.c vr_err.c
 OBJ        = $(SRC:.c=.o)

@@ -29,15 +29,17 @@ void Console_Halt() {
 // scan input from stdin and treat the input as an ASCII-encoded character for the memory load result
 uint32_t Console_Read_char() {
     char c;
-    scanf("%c", &c);
-    return c;
+    if (scanf("%c", &c) != EOF)
+        return c;
+    return 0;
 }
 
 // scan input from stdin and parse the input as a signed integer for the memory load result
 uint32_t Console_Read_int() {
     int n;
-    scanf("%d", &n);
-    return n;
+    if (scanf("%d", &n) != EOF)
+        return n;
+    return 0;
 }
 
 // print the value of PC in lower case hexadecimal format to stdout
@@ -57,10 +59,10 @@ void Dump_reg_bank() {
 // print the value of M[v] in lower case hexadecimal format to stdout 
 // v is the value being stored interpreted as an 32-bit unsigned integer
 void Dump_mem_word(uint32_t v, uint32_t instruc) {
-    if (v > (INSTRUC_MEM + DATA_MEM)) {
+    if (v >= (INSTRUC_MEM + DATA_MEM)) {
         err_illegal_op(instruc);
     } else {
-        fprintf(stdout, "%x\n", memptr->inst_mem[v]);
+        fprintf(stdout, "%x\n", memptr->inst_data_mem[v]);
     }
 }
 

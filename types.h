@@ -27,8 +27,7 @@ struct heap_bank {
 extern struct heap_bank * heap[NUM_BANK];
 
 struct mem {
-    uint8_t inst_mem[INSTRUC_MEM];
-    uint8_t data_mem[DATA_MEM];
+    uint8_t inst_data_mem[INSTRUC_MEM + DATA_MEM];
     uint8_t vroutine_mem[VROUTINE_MEM];
     struct heap_bank heap_mem[NUM_BANK];
 };
