@@ -16,15 +16,9 @@ uint32_t sign_extend(uint32_t n, int imm_bits) {
 }
 
 // ------------------------- DECODE --------------------------
-void type_R(uint32_t instruc) {
-    // func3 (14<-12 bits)
+void type_R(uint32_t instruc, uint32_t rs1, uint32_t rs2, uint32_t func3, uint32_t rd) {
     // func7 (31<-25 bits)
-    uint32_t func3 = (instruc >> 12) & 0x7;
     uint32_t func7 = instruc >> 25;
-
-    uint32_t rd = (instruc >> 7) & 0x1F;
-    uint32_t rs1 = (instruc >> 15) & 0x1F;
-    uint32_t rs2 = (instruc >> 20) & 0x1F;
 
     if (func3 == 0x0) {
         switch (func7) {
@@ -66,12 +60,7 @@ void type_R(uint32_t instruc) {
     }
 }
 
-void type_I(uint32_t instruc, uint32_t opcode) {
-    // func3 (14<-12 bits)
-    uint32_t func3 = (instruc >> 12) & 0x7;
-
-    uint32_t rd = (instruc >> 7) & 0x1F;
-    uint32_t rs1 = (instruc >> 15) & 0x1F;
+void type_I(uint32_t instruc, uint32_t rs1, uint32_t func3, uint32_t rd, uint32_t opcode) {
     uint32_t imm = sign_extend((instruc >> 20), 12); // 12 bits
 
     // // printf("func3 = %.2x\n", func3);
@@ -127,15 +116,7 @@ void type_I(uint32_t instruc, uint32_t opcode) {
 
 }
 
-void type_S(uint32_t instruc) {
-    // func3 (14<-12 bits)
-    uint32_t func3 = (instruc >> 12) & 0x7;
-
-    // // printf("%.2x | \n", func3);
-
-    uint32_t rs1 = (instruc >> 15) & 0x1F;
-    uint32_t rs2 = (instruc >> 20) & 0x1F;
-    
+void type_S(uint32_t instruc, uint32_t rs1, uint32_t rs2, uint32_t func3) {
     uint32_t imm = sign_extend( ( ((instruc >> 25) << 5 ) + ((instruc >> 7) & 0x1F) ), 12); // 12 bits
     
     if (func3 == 0x0)
@@ -146,15 +127,7 @@ void type_S(uint32_t instruc) {
         S_operation(SW, rs1, rs2, imm, instruc);
 }
 
-void type_SB(uint32_t instruc) {
-    // func3 (14<-12 bits)
-    uint32_t func3 = (instruc >> 12) & 0x7;
-
-    // // printf("%.2x | \n", func3);
-
-    uint32_t rs1 = (instruc >> 15) & 0x1F;
-    uint32_t rs2 = (instruc >> 20) & 0x1F;
-
+void type_SB(uint32_t instruc, uint32_t rs1, uint32_t rs2, uint32_t func3) {
     uint32_t del1 = (instruc >> 7) & 0x1; // 11 -> 10
     uint32_t del2 = (instruc >> 8) & 0xF; // 4:1 -> 3:0
     uint32_t del3 = (instruc >> 25) & 0x3F; // 10:5 -> 9:4
@@ -176,16 +149,13 @@ void type_SB(uint32_t instruc) {
         SB_operation(BGEU, rs1, rs2, imm);
 }
 
-void type_U(uint32_t instruc) {
-    uint32_t rd = (instruc >> 7) & 0x1F;
+void type_U(uint32_t instruc, uint32_t rd) {
     uint32_t imm = sign_extend( (instruc >> 12), 20); // 20 bits
 
     LUI(rd, imm);
 }
 
-void type_UJ(uint32_t instruc) {
-    uint32_t rd = (instruc >> 7) & 0x1F;
-
+void type_UJ(uint32_t instruc, uint32_t rd) {
     uint32_t del1 = (instruc >> 12) & 0xFF; // 19:12 -> 18:11
     uint32_t del2 = (instruc >> 20) & 0x1; // 11 -> 10
     uint32_t del3 = (instruc >> 21) & 0x3FF; // 10:1 -> 9:0

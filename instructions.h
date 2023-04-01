@@ -4,12 +4,12 @@
 #include <stdint.h>
 
 // decode
-void type_R(uint32_t i);
-void type_I(uint32_t i, uint32_t op);
-void type_S(uint32_t i);
-void type_SB(uint32_t i);
-void type_U(uint32_t instruc);
-void type_UJ(uint32_t instruc);
+void type_R(uint32_t i, uint32_t rs1, uint32_t rs2, uint32_t func3, uint32_t rd);
+void type_I(uint32_t i, uint32_t rs1, uint32_t func3, uint32_t rd, uint32_t op);
+void type_S(uint32_t i, uint32_t rs1, uint32_t rs2, uint32_t func3);
+void type_SB(uint32_t i, uint32_t rs1, uint32_t rs2, uint32_t func3);
+void type_U(uint32_t instruc, uint32_t rd);
+void type_UJ(uint32_t instruc, uint32_t rd);
 
 void R_operation(int command, uint32_t rd, uint32_t rs1, uint32_t rs2);
 void I_operation(int command, uint32_t rd, uint32_t rs1, uint32_t imm, uint32_t insruc);

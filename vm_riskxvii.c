@@ -82,6 +82,12 @@ void fetch_instruc(struct mem * memptr) {
         
         // OPCODE (right most 7 bits)
         uint32_t opcode = (instruc << 25) >> 25;
+
+        // some common sections
+        uint32_t rs1 = (instruc >> 15) & 0x1F; // R,I,S,SB
+        uint32_t rs2 = (instruc >> 20) & 0x1F; // R,S,SB
+        uint32_t func3 = (instruc >> 12) & 0x7; // R,I,S,SB
+        uint32_t rd = (instruc >> 7) & 0x1F; // R,I,U,UJ
         
         /* Summary:
         - type R: 0110011 = 33
@@ -90,33 +96,33 @@ void fetch_instruc(struct mem * memptr) {
         - type SB: 1100011 = 63
         - type U: 0110111 = 37 [lui]
         - type UJ: 1101111 = 6F [jal] */
-
+        
         switch (opcode)
         {
             case 0x33:
-                type_R(instruc);
+                type_R(instruc, rs1, rs2, func3, rd);
                 break;
                 
             case 0x13:
             case 0x3:
             case 0x67:
-                type_I(instruc, opcode);
+                type_I(instruc, rs1, func3, rd, opcode);
                 break;
           
             case 0x23:
-                type_S(instruc);
+                type_S(instruc, rs1, rs2, func3);
                 break;
                 
             case 0x63:
-                type_SB(instruc);
+                type_SB(instruc, rs1, rs2, func3);
                 break;
                 
             case 0x37:
-                type_U(instruc);
+                type_U(instruc, rd);
                 break;
                 
             case 0x6F:
-                type_UJ(instruc);
+                type_UJ(instruc, rd);
                 break;
                 
             default:
