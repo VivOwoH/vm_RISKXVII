@@ -3,7 +3,7 @@ TEST_TARGET = autotest.sh
 
 CC = gcc
 
-CFLAGS     = -c -Os -s -fno-ident -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -O0 -std=c11
+CFLAGS     = -c -Os -s -fno-ident -fno-exceptions -fno-asynchronous-unwind-tables -Wall -Wvla -Werror -O0 -std=c11
 LIB_FLAGS = -lm
 SRC        = vm_riskxvii.c instructions.c vr_err.c
 OBJ        = $(SRC:.c=.o)
@@ -28,4 +28,4 @@ run_tests:
 	./$(TEST_TARGET)
 
 clean:
-	rm -f *.o *.obj $(TARGET)
+	rm -f *.o *.obj *.gcno *.gcov *.gcda $(TARGET)

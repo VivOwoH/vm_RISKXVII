@@ -5,6 +5,9 @@
 #include "instructions.h"
 #include "vr_err.h"
 
+#define LOAD 0
+#define STORE 1
+
 uint32_t sign_extend(uint32_t n, int imm_bits) {
     // check MSB 1 or 0
     // MSB 1: sign extend left with 1
@@ -198,6 +201,64 @@ void type_UJ(uint32_t instruc) {
 
 // ------------------------- MEMORY -----------------------------
 
+// helper function for load/store in heap
+// load = 0; store = 1
+// **Load does not need "value" (thus 0)
+uint32_t heap_read_write(uint32_t addr, int num_cell, uint32_t instruc, uint32_t value, int mode) {
+    for (int i = 0; i < NUM_BANK; i++) {
+        uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
+        // check if valid offset from malloced address, and bank is allocated
+        // case 1: in 1 block
+        uint32_t result = 0;
+
+        if (addr >= heap[i]->addr && (addr+num_cell-1) <= heap_end_addr 
+                && !heap[i]->is_free) {
+            for (int j = 0; j < num_cell; j++) {
+                if (mode == LOAD) {
+                    result += heap[i]->bank_content[addr - heap[i]->addr + j] 
+                            << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                } 
+                else if (mode == STORE) {
+                    heap[i]->bank_content[addr - heap[i]->addr + j] 
+                            = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
+                }
+            }
+            return result;
+        } 
+        // case 2: in multiple blocks
+        else if (addr >= heap[i]->addr && (addr <= heap_end_addr) && (addr+num_cell-1) > heap_end_addr
+                && !heap[i]->is_free && !heap[i+1]->is_free) {
+
+            int overflow = (addr+num_cell-1) - heap_end_addr;
+
+            for (int j = 0; j < (num_cell - overflow); j++) {
+                if (mode == LOAD) {
+                    result += heap[i]->bank_content[addr - heap[i]->addr + j] 
+                            << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                }
+                else if (mode == STORE) {
+                    heap[i]->bank_content[addr - heap[i]->addr + j] 
+                            = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
+                }
+            }
+            // overflow -> next block in heap
+            for (int k = 0; k < overflow; k++) {
+                if (mode == LOAD) {
+                    result += heap[i+1]->bank_content[heap[i+1]->addr + k] 
+                        << (8 * (overflow - 1 - k)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                }
+                else if (mode == STORE) {
+                    heap[i+1]->bank_content[heap[i+1]->addr + k] 
+                        = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
+                }
+            }
+            return result;
+        } 
+    }
+    err_illegal_op(instruc); // reaching here means cannot find valid bank(s)
+    return 1; // error
+}
+
 uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
     switch (addr) {
         case (C_Read_char):
@@ -209,49 +270,16 @@ uint32_t mem_read(uint32_t addr, int num_cell, uint32_t instruc) {
         default:
             // read from instruc or data allowed (up to 4 bytes)
             if (addr < (INSTRUC_MEM + DATA_MEM)) {
-                uint32_t value = 0;
+                uint32_t result = 0;
                 for (int i = 0; i < num_cell; i++) {
-                    value += memptr->inst_mem[addr+i] << (8 * (num_cell-1-i)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
+                    result += memptr->inst_mem[addr+i] << (8 * (num_cell-1-i)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
                 }
-                return value;
+                return result;
             }
             // read from heap bank: find heap bank that has addr in its range to check alloc
             // NOTE: can read up to 4 bytes
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
-
-                for (int i = 0; i < NUM_BANK; i++) {
-                    uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
-                    // check if valid offset from malloced address, and bank is allocated
-                    // case 1: in 1 block
-                    uint32_t value = 0;
-
-                    if (addr >= heap[i]->addr && (addr+num_cell-1) <= heap_end_addr 
-                            && !heap[i]->is_free) {
-                        for (int j = 0; j < num_cell; j++) {
-                            value += heap[i]->bank_content[addr - heap[i]->addr + j] 
-                                        << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
-                        }
-                        return value;
-                    } 
-                    // case 2: in multiple blocks
-                    else if (addr >= heap[i]->addr && (addr <= heap_end_addr) && (addr+num_cell-1) > heap_end_addr
-                            && !heap[i]->is_free && !heap[i+1]->is_free) {
-
-                        int overflow = (addr+num_cell-1) - heap_end_addr;
-
-                        for (int j = 0; j < (num_cell - overflow); j++) {
-                            value += heap[i]->bank_content[addr - heap[i]->addr + j] 
-                                        << (8 * (num_cell-1-j)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
-                        }
-                        // overflow -> next block in heap
-                        for (int k = 0; k < overflow; k++) {
-                            value += heap[i+1]->bank_content[heap[i+1]->addr + k] 
-                                    << (8 * (overflow - 1 - k)); // e.g. 32bits:8*3, 8*2, 8*1, 8*0
-                        }
-                        return value;
-                    } 
-                }
-                err_illegal_op(instruc); // reaching here means cannot find valid bank(s) to read
+                return heap_read_write(addr, num_cell, instruc, 0, LOAD);
             } 
             else {
                 err_illegal_op(instruc);
@@ -307,38 +335,7 @@ uint32_t mem_write(uint32_t addr, uint32_t value, int num_cell, uint32_t instruc
             // write to heap bank: find heap bank that has addr in its range to check alloc
             // NOTE: can write up to 4 bytes
             else if (addr >= HEAP_START_ADDR && (addr+num_cell-1) < (HEAP_START_ADDR + HEAP_MEM)) {
-
-                for (int i = 0; i < NUM_BANK; i++) {
-                    uint32_t heap_end_addr = heap[i]->addr + heap[i]->alloc_len - 1;
-                    // check if valid offset from malloced address, and bank is allocated
-                    // case 1: in 1 block
-                    if (addr >= heap[i]->addr && ( (addr+num_cell-1) <= heap_end_addr )
-                            && !heap[i]->is_free) {
-                        for (int j = 0; j < num_cell; j++) {
-                            heap[i]->bank_content[addr - heap[i]->addr + j] 
-                                        = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
-                        }
-                        return 0;
-                    } 
-                    // case 2: in multiple blocks
-                    else if (addr >= heap[i]->addr && (addr <= heap_end_addr) &&  ( (addr+num_cell-1) > heap_end_addr )
-                            && !heap[i]->is_free && !heap[i+1]->is_free) {
-
-                        int overflow = (addr+num_cell-1) - heap_end_addr;
-
-                        for (int j = 0; j < (num_cell - overflow); j++) {
-                            heap[i]->bank_content[addr - heap[i]->addr + j] 
-                                        = ( value >> (8 * (num_cell-1-j)) ) & 0xFF; 
-                        }
-                        // overflow -> next block in heap
-                        for (int k = 0; k < overflow; k++) {
-                            heap[i+1]->bank_content[heap[i+1]->addr + k] 
-                                    = ( value >> (8 * (overflow - 1 - k)) ) & 0xFF; 
-                        }
-                        return 0;
-                    }
-                }
-                err_illegal_op(instruc); // reaching here means cannot find valid bank(s) to write
+                return heap_read_write(addr, num_cell, instruc, value, STORE);
             } 
             else {
                 err_illegal_op(instruc);

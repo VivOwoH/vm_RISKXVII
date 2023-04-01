@@ -50,7 +50,8 @@ Exit codes:
 
 
 ## Flags used to reduce executable size
--Os: optimize for size is an obvious one
--s: strip the binary, which you've already tried
--fno-ident: GCC outputs an entire section to advertise itself, which, once padded/aligned is significant in a small program
--fno-asynchronous-unwind-tables: omit stack frame debug information stack that's not stripped otherwise
+-Os: optimize size
+-s: strip the binary
+-fno-ident: no compiler name and version information
+-fno-exception: omit code to proprogate exception handling
+-fno-asynchronous-unwind-tables: omit static unwind table
