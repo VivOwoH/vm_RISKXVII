@@ -12,29 +12,17 @@ inline int scan_int() {
 }
 
 int main() {
-    int result[3]; 
-    int count = 0;
-
-    int mode = scan_int();
-
     int a = scan_int();
     int b = scan_int();
-    result[0] = a ^ b; // XOR
+    *ConsoleWriteSInt = a ^ b; // XOR
     
     int c = scan_int();
     int d = scan_int();
-    result[1] = c | d; // OR
+    *ConsoleWriteSInt = c | d; // OR
 
     int e = scan_int();
     int f = scan_int();
-    result[2] = e & f; // AND
-
-    if (mode == 'X')
-        *ConsoleWriteSInt = result[0];
-    else if (mode == 'O')
-        *ConsoleWriteSInt = result[1];
-    else if (mode == 'A')
-        *ConsoleWriteSInt = result[2];
+    *ConsoleWriteSInt = e & f; // AND
 
     return 0;
 }
