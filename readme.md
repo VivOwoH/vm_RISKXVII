@@ -20,6 +20,14 @@
 - Heap free not start address (NO)
 - Heap free read/write/free address out of range (NO)
 
+## Exit codes
+1 - invalid command-line argument provided
+2 - cannot open image file specified
+3 - normal halt operation
+4 - instruction not implemented
+5 - illegal operation (all invalid memory accesses trigger this)
+6 - Reject file larger than expected size (2048 bytes)
+
 ## --------------------- NOTES (ignore) ----------------------------
 ## Memory
 - 0x0000 - 0x3ff: Instruction Memory - Contains 2^10 of bytes for text segment. (1024 bytes)
@@ -59,16 +67,6 @@ Summary:
 - type SB: 1100011 = 63
 - type U: 0110111 = 37 [lui]
 - type UJ: 1101111 = 6F [jal]
-
-
-## Error handling
-Exit codes:
-1 - invalid command-line argument provided
-2 - cannot open image file specified
-3 - normal halt operation
-4 - instruction not implemented
-5 - illegal operation (all invalid memory accesses trigger this)
-6 - Reject file larger than expected size (2048 bytes)
 
 
 ## Flags used to reduce executable size
