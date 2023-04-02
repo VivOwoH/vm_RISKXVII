@@ -1,9 +1,7 @@
 ## Testcases
-
-**I could not compile the toolchain and create my images in time:( I had handled several edge cases, and made an attempt to write testcases in c (in tests folder), but could not test against the program in the end.**
-
-- basic arithmetic (with func)
-- program involves branching
+**I do not have enough time to implement all test cases**
+- basic arithmetic (with func) ✓
+- program involves branching ✓
 - invoke all virtual routines 
 - heap malloc
 - heap free

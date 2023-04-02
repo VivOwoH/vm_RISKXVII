@@ -1,0 +1,7 @@
+Test equal/not equal:
+equal!
+Test smaller/larger:
+c < d
+Test unsigned smaller/larger:
+unsigned e > unsigned f
+CPU Halt Requested

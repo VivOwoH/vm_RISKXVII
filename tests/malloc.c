@@ -1,33 +1,33 @@
 int volatile *const ConsoleWriteUInt = (int *)0x0808; // pointer to int
 
-inline int malloc(int value){
-    int result;
-    int addr = 0x0830; // malloc address
-    asm volatile("sw %[res], 0(%[adr]), %[value]"
-        : [res]"=r"(result) // output
-        : [adr]"r"(addr), [value]"r"(value)); // input
-    return result;
+void prints(char *str){
+    while(*str) *((char *)0x0800) = *(str++);
 }
 
-inline void free(int value) {
-    int result;
+inline int malloc_mem(int value){
+    int addr = 0x0830; // malloc address
+    asm volatile("sw %[adr], 0(%[value])"
+        : [adr]"=r"(addr) // output
+        : [value]"r"(value)); // input
+}
+
+inline void free_mem(int value) {
     int addr = 0x0834 ; // free address
-    asm volatile("sw %[res], 0(%[adr]), %[value]" 
-        : [res]"=r"(result) // output
-        : [adr]"r"(addr), [value]"r"(value)); // input
-    return result;
+    asm volatile("sw %[adr], 0(%[value])" 
+        : [adr]"=r"(addr) // output
+        : [value]"r"(value)); // input
 }
 
 int main() {
-    prints("Request to allocate 192 bytes");
-    *ConsoleWriteUInt = malloc(192); // should give me b700
+    prints("Request to allocate 192 bytes\n");
+    malloc_mem(192); // should give me b700
     prints("\n");
 
-    prints("Request to free first bank");
-    free(0xb740);
+    prints("Request to free first bank\n");
+    free_mem(0xb740);
     prints("\n");
 
-    print("Request to allocate 10 bytes");
-    *ConsoleWriteUInt = malloc(10); // should give me b740
+    prints("Request to allocate 10 bytes\n");
+    malloc_mem(10); // should give me b740
     prints("\n");
 }
