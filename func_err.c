@@ -23,6 +23,7 @@ void Console_Write_uint(uint32_t value) {
 
 // halt and exit
 void Console_Halt() {
+    VM_free_all(); // free all allocated memory before exiting
     fprintf(stdout, "CPU Halt Requested\n");
     exit(3);
 }
@@ -126,6 +127,21 @@ void VM_free(uint32_t addr, uint32_t instruc) {
         } 
     }
     err_illegal_op(instruc); // addr not found, raise error
+    return;
+}
+
+void VM_free_all() {
+    for (int i = 0; i < NUM_BANK; i++) {
+         if (heap[i]->prev == NULL && !heap[i]->is_free) {
+            heap[i]->is_free = 1; // free current
+            // free consec linked bank if exist
+            struct heap_bank * current = heap[i]->next;
+            while (current != NULL) {
+                current->is_free = 1;
+                current = current->next;
+            }
+        }
+    }
     return;
 }
 

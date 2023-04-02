@@ -23,6 +23,7 @@ void Dump_mem_word(uint32_t v, uint32_t instruc);
 
 // Heap
 uint32_t VM_malloc(uint32_t value);
+void VM_free_all();
 void VM_free(uint32_t addr, uint32_t instruc);
 uint32_t heap_read_write(uint32_t addr, int num_cell, uint32_t instruc, uint32_t value, int mode);
 
