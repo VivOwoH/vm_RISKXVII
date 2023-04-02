@@ -23,11 +23,11 @@ run:
 	./$(TARGET)
 
 tests:
-	echo "additional c file for tests":
+	echo "Please refer to readme.md regarding testcases"
 
 # compile rule different in tests
 run_tests:
 	./$(TEST_TARGET)
 
 clean:
-	rm -f *.o *.obj *.gcno *.gcov *.gcda $(TARGET)
+	rm -f *.o *.obj *.gcno *.gcov *.gcda *.info $(TARGET)

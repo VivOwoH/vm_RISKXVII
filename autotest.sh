@@ -1,10 +1,12 @@
 gcc --coverage -c -Wall -Wvla -Werror -O0 -g -std=c11 -lm vm_riskxvii.c
 gcc --coverage -c -Wall -Wvla -Werror -O0 -g -std=c11 -lm instructions.c
-gcc --coverage -c -Wall -Wvla -Werror -O0 -g -std=c11 -lm vr_err.c
+gcc --coverage -c -Wall -Wvla -Werror -O0 -g -std=c11 -lm func_err.c
 
-gcc --coverage -fsanitize=address -o vm_riskxvii vm_riskxvii.o instructions.o vr_err.o -lm
+gcc --coverage -fsanitize=address -o vm_riskxvii vm_riskxvii.o instructions.o func_err.o -lm
 
-echo "add_2_numbers:"
-./vm_riskxvii tests/add_2_numbers.mi < tests/test.in | diff -su - tests/test.out
+echo "[sample(NOT MY TESTCASE)]print_h:"
+./vm_riskxvii tests/images/printing_h.mi | diff -su - tests/print_h.out
 
 gcov vm_riskxvii.c
+# lcov -c --directory . --output-file main_coverage.info
+# genhtml main_coverage.info --output-directory coverage_report
