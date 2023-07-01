@@ -1,6 +1,5 @@
 # Virtual Machine (RISC-V)
 ## Testcases
-**I do not have enough time to implement all test cases**
 - basic arithmetic (with func) ✓
 - program involves branching ✓
 - invoke all virtual routines 
@@ -27,7 +26,6 @@
 5 - illegal operation (all invalid memory accesses trigger this)
 6 - Reject file larger than expected size (2048 bytes)
 
-## --------------------- NOTES (ignore) ----------------------------
 ## Memory
 - 0x0000 - 0x3ff: Instruction Memory - Contains 2^10 of bytes for text segment. (1024 bytes)
 - 0x0400 - 0x7ff: Data Memory - Contains 2^10 of bytes for global variables, and function stack. (1024 bytes)
@@ -39,7 +37,6 @@
 - R0 maintains 0
 - R1~R31: general purpose
 - R32 = PC 
-
 
 ## Instructions
 *32 bits instruction with right most 7 bits as opcode*
@@ -66,7 +63,6 @@ Summary:
 - type SB: 1100011 = 63
 - type U: 0110111 = 37 [lui]
 - type UJ: 1101111 = 6F [jal]
-
 
 ## Flags used to reduce executable size
 -Os: optimize size
